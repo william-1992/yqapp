@@ -1,0 +1,39 @@
+// 定义预计字体大小
+$rootFootSize: 375 / 10;
+
+@function px2rem($px) {
+	@return $px / $rootFootSize + rem
+}
+
+// 搜索标题字号
+$searchTitleSize: px2rem(20);
+
+// tab选中字体色
+$activeColor: #323948;
+
+// tab 置灰
+$defaultColor: #acb7cf;
+
+// 边框色
+$borderColor: #dce2f4;
+
+// 页面背景色
+$bgColor: #f7f9fe;
+
+// 新闻列表‘正’字背景色
+$rectBg1: #59d16d;
+
+// 新闻列表‘中’字背景色
+$rectBg2: #5984d1;
+
+// 新闻列表‘负’字背景色
+$rectBg3: #ff6651;
+
+// 删除图标色值
+$deleteBg: #6f7ea0;
+
+// 三联动上边阴影
+$shadowTop: 0 5px 5px 5px rgba(0,0,0,.5);
+
+// placehodler 色值
+$grayColor: #d3dbeb;

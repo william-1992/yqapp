@@ -2,8 +2,13 @@ import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
+import { Tabbar, TabbarItem, Tab, Tabs, Icon, NavBar, Button, SwipeCell, Popup, Search, DropdownMenu, DropdownItem, List, Checkbox, CheckboxGroup, Picker, Overlay, Area, DatetimePicker, Slider, Collapse, CollapseItem, Field } from 'vant';
+import '@css/reset.css';
+import '@font/iconfont.css';
+import '@js/htmlFontSize.js';
 
 Vue.config.productionTip = false;
+Vue.use(Tabbar).use(TabbarItem).use(Tab).use(Tabs).use(Icon).use(NavBar).use(Button).use(SwipeCell).use(Popup).use(Search).use(DropdownMenu).use(DropdownItem).use(List).use(Checkbox).use(CheckboxGroup).use(Picker).use(Overlay).use(Area).use(DatetimePicker).use(Slider).use(Collapse).use(CollapseItem).use(Field);
 
 new Vue({
   router,

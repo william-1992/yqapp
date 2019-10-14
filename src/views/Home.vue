@@ -1,18 +1,44 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+  	<keep-alive>
+  		<component :is="isComponent"></component>
+  	</keep-alive>
+    <tool-bar v-show="toolbarToggle"></tool-bar>
+    <!-- <popup></popup> -->
+    <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
+    <picker></picker>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
-
+import { mapState } from 'vuex';
+import ToolBar from '@c/common/ToolBar';
+import Center from '@c/Center';
+import City from '@c/City';
+import Message from '@c/Message';
+import Mine from '@c/Mine';
+import Popup from '@c/common/Popup';
+import Picker from '@c/common/Picker';
 export default {
   name: "home",
   components: {
-    HelloWorld
+    ToolBar,
+    Popup,
+    Picker,
+  	'center': Center,
+  	'city': City,
+  	'message' :Message,
+  	'mine': Mine
+  },
+  computed: {
+    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle'])
+  },
+  methods: {
+    closeOverlay() {
+      this.$store.commit('handleOverlay', false)
+      this.$store.commit('handleAddress', false)
+
+    }
   }
 };
 </script>
