@@ -6,7 +6,13 @@
 			</span>
 		</div>
 		<div class="right">
-			<van-button type="primary" size="small" color="#f7f9fe" @click="onClickAddress">
+			<van-button 
+				v-if="hotType === 'centerpage'"
+				type="primary" 
+				size="small" 
+				color="#f7f9fe" 
+				@click="onClickAddress"
+			>
 				{{ pickerName }}<i class="iconfont">&#xe65a;</i>
 			</van-button>
 			<van-button type="primary" size="small" color="#f7f9fe" @click="onClickFilter">筛选<i class="iconfont">&#xe65a;</i></van-button>
@@ -31,6 +37,9 @@ import { mapState } from 'vuex';
 import TimeFilter from '@c/common/TimeFilter';
 export default {
 	name: 'hottest',
+	props: {
+		hotType: String
+	},
 	components: {
 		TimeFilter
 	},
@@ -78,6 +87,7 @@ export default {
 	padding: px2rem(10);
 	border-bottom: 1px solid $borderColor;
 	background-color: #fff;
+	padding-top: 0;
 	.left {
 		font-size: px2rem(14);
 		line-height: px2rem(30);

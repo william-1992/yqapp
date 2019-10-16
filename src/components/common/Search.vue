@@ -1,9 +1,14 @@
 <template>
 	<div class="search">
 		<h1>{{ name }}</h1>
-		<p>
+		<p v-if="checkboxToggleCenter">
 			<span class="iconfont" @click="onClickPopup">&#xe605;</span>
-			<span v-if="checkboxToggle == true" @click="setUp(2)">完成</span>
+			<span v-if="checkboxToggleCenter == true" @click="setUp(2)">完成</span>
+			<span @click="setUp(1)" v-else>管理</span>
+		</p>
+		<p v-else>
+			<span class="iconfont" @click="onClickPopup">&#xe605;</span>
+			<span v-if="checkboxToggleCity == true" @click="setUp(2)">完成</span>
 			<span @click="setUp(1)" v-else>管理</span>
 		</p>
 		<!-- <popup></popup> -->
@@ -57,7 +62,7 @@
 import { mapState } from 'vuex';
 import Popup from '@c/common/Popup';
 export default {
-	name: 'searcg',
+	name: 'search',
 	components: {
 		Popup
 	},
@@ -76,7 +81,8 @@ export default {
 	computed: {
 		...mapState({
 			name: state => state.home_tabs_name,
-			checkboxToggle: state => state.checkboxToggle
+			checkboxToggleCenter: state => state.checkboxToggleCenter,
+			checkboxToggleCity: state => state.checkboxToggleCity
 		})
 	},
 	methods: {
@@ -86,9 +92,17 @@ export default {
 		},
 		setUp(type) {
 			if(type === 1) {
-				this.$store.commit('handleCheckbox', true)
+				if(this.name == '监测中心') {
+					this.$store.commit('handleCheckboxCenter', true)
+				}else {
+					this.$store.commit('handleCheckboxCity', true)
+				}
 			}else {
-				this.$store.commit('handleCheckbox', false)
+				if(this.name == '监测中心') {
+					this.$store.commit('handleCheckboxCenter', false)
+				}else {
+					this.$store.commit('handleCheckboxCity', false)
+				}
 			}
 		},
 		onSearch() {

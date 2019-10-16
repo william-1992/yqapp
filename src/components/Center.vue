@@ -10,16 +10,10 @@ export default {
 	name: 'center',
 	components: {
 		CenterIndex
-	},
-	data() {
-		return {
-		}
 	}
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@css/constants.scss';
-
-
 </style>

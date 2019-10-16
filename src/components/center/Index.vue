@@ -4,7 +4,7 @@
 		<van-tabs v-model="active" :line-width="14" title-active-color="#323948" title-inactive-color="#d3dbeb" :border='false' @change="getTabs">
 			<van-tab v-for="item in list" :title="item.title" :key="item.id"></van-tab>
 		</van-tabs>
-		<hottest />
+		<hottest hotType="centerpage"></hottest>
 		<text-list />
 	</div>
 </template>
@@ -63,7 +63,6 @@ export default {
 		font-size: px2rem(18)
 	}
 	/deep/.van-tabs--line .van-tabs__wrap {
-		height: px2rem(38)
 	}
 }
 </style>

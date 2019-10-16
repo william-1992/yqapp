@@ -15,12 +15,12 @@
 					<div class="title">
 						<div class="left">
 							<van-checkbox 
-								v-show="checkboxToggleCenter"
+								v-show="checkboxToggleCity"
 								v-model="item.checked" 
 								:key="item.id" 
 								:name="item.id" 
 								checked-color="#ff6651"
-								@change="onClickRadio(item.id)"
+								@click.stop="onClickRadio(item.id)"
 							></van-checkbox>
 							<div class="rect">{{ item.type }}</div>
 							<div class="frie" @click.stop="onLinkEvent(item.id)">{{ item.number }}</div>
@@ -68,11 +68,11 @@
 
 		</van-list>
 
-		<div class="allSelect" v-show="checkboxToggleCenter">
+		<div class="allSelect" v-show="checkboxToggleCity">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
 			<div class="btn-wrap">
-				<van-button color="#6f7ea0" plain size="small">删除</van-button>
-				<van-button color="#6f7ea0" size="small">推送</van-button>
+				<!-- <van-button color="#6f7ea0" plain size="small">删除</van-button> -->
+				<van-button color="#6f7ea0" size="small" @click="onClickPush">推送</van-button>
 			</div>
 		</div>
 
@@ -103,6 +103,7 @@
 
 <script>
 import {mapState} from 'vuex';
+import { Toast } from 'vant';
 import Detail from '@c/common/Detail';
 import EventList from '@c/center/EventList';
 export default {
@@ -176,7 +177,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['checkboxToggleCenter'])
+		...mapState(['checkboxToggleCity'])
 	},
 	watch: {
 		allchecked(val) {
@@ -217,6 +218,19 @@ export default {
     onLinkEvent(id) {
     	console.log(id)
     	this.showLinkEventToggle = true
+    },
+    onClickPush() {
+    	let arr = []
+    	for(let i = 0; i<this.newlist.length; i++) {
+    		if(this.newlist[i].checked) {
+    			arr.push(this.newlist[i].id)
+    		}
+    	}
+    	if(arr.length > 0) {
+    		// 走接口
+    	}else {
+    		Toast('你还没有选择事件哦')
+    	}
     }
 	}
 }

@@ -1,18 +1,18 @@
 <template>
 	<div class="city">
-		<search></search>
+		<city-index></city-index>
 	</div>
 </template>
 
 <script>
-import Search from '@c/common/Search';
+import CityIndex from '@c/city/Index';
 export default {
 	name: 'city',
 	data() {
 		return {}
 	},
 	components: {
-		Search
+		CityIndex
 	}
 }
 </script>

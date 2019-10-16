@@ -14,7 +14,8 @@ export default new Vuex.Store({
     isComponent: 'center',
     toolbarToggle: true,   // 底部标签栏开关
     popupToggle: false,   // 搜索页面开关
-    checkboxToggle: false,   // 新闻复选框开关
+    checkboxToggleCenter: false,   // 中心复选框开关
+    checkboxToggleCity: false,   // 城市复选框开关
     showPicker: false,     // 地址弹框开关
     pickerName: '杭州',     // 当前地址名
     overlayToggle: false,   // 遮罩开关
@@ -36,8 +37,11 @@ export default new Vuex.Store({
     handlePopup(state, val) {
       state.popupToggle = val
     },
-    handleCheckbox(state, val) {
-      state.checkboxToggle = val
+    handleCheckboxCenter(state, val) {
+      state.checkboxToggleCenter = val
+    },
+    handleCheckboxCity(state, val) {
+      state.checkboxToggleCity = val
     },
     handleAddress(state, val) {
       state.showPicker = val
