@@ -1,5 +1,5 @@
 <template>
-	<div class="detail">
+	<div class="detail" :style="{ paddingTop: paddingTT + 'px' }">
 
 		<header>
 			<h3>新闻详情</h3>
@@ -36,7 +36,7 @@
 		</div>
 
 		<div class="de-push">
-			<van-popup v-model="pushToggle" position='bottom' :style="{height: '25%'}">
+			<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
 				<push-to @closeThis="closePush"></push-to>
 			</van-popup>
 		</div>
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import Bscroll from 'better-scroll';
+import { mapState } from 'vuex';
 import { Dialog } from 'vant';
 import PushTo from '@c/common/PushTo';
 export default {
@@ -62,8 +62,11 @@ export default {
 			timer: null
 		}
 	},
+	computed: {
+		...mapState(['paddingTT'])
+	},
 	mounted() {
-		this.scroll = new Bscroll(this.$refs.wrapper, {mouseWheel: true, click: true, tag: true})
+		// this.scroll = new Bscroll(this.$refs.wrapper, {mouseWheel: true, click: true, tag: true})
 		this.timer = setInterval(() => {
 			if(this.fontToggle) {
 				this.fontToggle = false
@@ -123,7 +126,7 @@ export default {
 		position: absolute;
 		top: px2rem(54);
 		bottom: px2rem(50);
-		overflow: hidden;
+		overflow: auto;
 		z-index: 1;
 		width: 100%;
 	}
@@ -172,7 +175,7 @@ export default {
 		position: absolute;
 		left: 0;
 		right: 0;
-		bottom: px2rem(50);
+		bottom: px2rem(45);
 		height: px2rem(40);
 		background-color: #fff;
 		z-index: 100;
@@ -182,11 +185,13 @@ export default {
 			position: absolute;
 			left: px2rem(6);
 			top: px2rem(16);
+			font-size: px2rem(14);
 		}
 		.max-step {
 			position: absolute;
 			right: px2rem(6);
 			top: px2rem(16);
+			font-size: px2rem(14);
 		}
 		.van-slider {
 			border-radius: 0;

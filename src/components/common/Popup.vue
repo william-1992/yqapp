@@ -4,7 +4,7 @@
 	  position="top"
 	  :style="{ height: '100%' }"
 	>
-		<div class="pop-wrap">
+		<div class="pop-wrap" :style="{ paddingTop: paddingTT + 'px' }">
 
 			<div class="search-wrap">
 				<van-icon name="arrow-left" @click="onClickBack" />
@@ -44,7 +44,7 @@ import { mapState } from 'vuex';
 export default {
 	name: 'popup',
 	computed: {
-		...mapState(['popupToggle'])
+		...mapState(['popupToggle', 'paddingTT'])
 	},
 	data() {
 		return {

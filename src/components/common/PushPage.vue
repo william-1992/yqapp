@@ -38,8 +38,8 @@
 						</van-checkbox>
 					</van-checkbox-group>
 				</van-collapse-item>
-			  <van-collapse-item title="标题2" name="2">内容</van-collapse-item>
-			  <van-collapse-item title="标题3" name="3">内容</van-collapse-item>
+			  <!-- <van-collapse-item title="标题2" name="2">内容</van-collapse-item>
+			  <van-collapse-item title="标题3" name="3">内容</van-collapse-item> -->
 			</van-collapse>
 		</section>
 		<section class="send-wrap">
@@ -72,7 +72,7 @@ export default {
 			sendradio: 1,
 			checked: false,
 			message: '',
-			activeNames: ['1'],
+			activeNames: [],
 			result: [],
 			namelist: [
 				{id: 1, name: '周恩来', office: '副总理'},
@@ -99,7 +99,6 @@ export default {
 @import '@css/constants.scss';
 .push-page {
 	height: 100%;
-	background-color: $bgColor;
 	header {
 		background-color: #fff;
 		padding: px2rem(10) px2rem(10) 0 0;
@@ -215,7 +214,8 @@ export default {
 		.van-radio {
 			margin-top: px2rem(10);
 			float: left;
-			margin-right: px2rem(20)
+			margin-right: px2rem(20);
+			font-size: px2rem(12);
 		}
 	}
 }

@@ -15,7 +15,7 @@
 					<div class="title">
 						<div class="left">
 							<van-checkbox 
-								v-show="checkboxToggleCity"
+								v-show="checkboxToggleColl"
 								v-model="item.checked" 
 								:key="item.id" 
 								:name="item.id" 
@@ -24,6 +24,7 @@
 							></van-checkbox>
 							<div class="rect">{{ item.type }}</div>
 							<div class="frie" @click.stop="onLinkEvent(item.id)">{{ item.number }}</div>
+							<h2>食品安全</h2>
 						</div>
 						<div class="right">
 							{{item.timer}}小时前更新
@@ -42,6 +43,12 @@
 					</div>
 					<div class="desc" @click="openDetail(item.id)">
 						<p>{{item.des}}</p>
+					</div>
+					<div class="tags">
+						<h5>监控词组：</h5>
+						<p>
+							<span v-for="(val, index) in item.tags" :key="index">{{val.title}}</span>
+						</p>
 					</div>
 				</div>					
 			<!-- </van-cell> --> 
@@ -62,10 +69,10 @@
 
 		</van-list>
 
-		<div class="allSelect" v-show="checkboxToggleCity">
+		<div class="allSelect" v-show="checkboxToggleColl">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
 			<div class="btn-wrap">
-				<!-- <van-button color="#6f7ea0" plain size="small">删除</van-button> -->
+				<van-button color="#6f7ea0" plain size="small" @click="onClickCancle">取消收藏</van-button>
 				<van-button color="#6f7ea0" size="small" @click="onClickPush">推送</van-button>
 			</div>
 		</div>
@@ -77,6 +84,7 @@
   		close-icon-position="top-left"
 		  position="right"
 		  :overlay="false"
+		  :get-container="collection"
 		  :style="{ height: '100%', width: '100%' }"
 		>
 			<detail></detail>
@@ -96,8 +104,8 @@
 </template>
 
 <script>
-import {mapState} from 'vuex';
 import { Toast } from 'vant';
+import { mapState } from 'vuex';
 import Detail from '@c/common/Detail';
 import EventList from '@c/center/EventList';
 export default {
@@ -171,7 +179,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['checkboxToggleCity'])
+		...mapState(['checkboxToggleColl'])
 	},
 	watch: {
 		allchecked(val) {
@@ -213,7 +221,23 @@ export default {
     	console.log(id)
     	this.showLinkEventToggle = true
     },
+    collection() {
+    	return document.querySelector('.collection')
+    },
     onClickPush() {
+    	let arr = []
+    	for(let i = 0; i<this.newlist.length; i++) {
+    		if(this.newlist[i].checked) {
+    			arr.push(this.newlist[i].id)
+    		}
+    	}
+    	if(arr.length > 0) {
+    		// 走接口
+    	}else {
+    		Toast('你还没有选择事件哦')
+    	}
+    }, 
+    onClickCancle() {
     	let arr = []
     	for(let i = 0; i<this.newlist.length; i++) {
     		if(this.newlist[i].checked) {
@@ -233,6 +257,12 @@ export default {
 <style lang="scss" scoped>
 @import '@css/constants.scss';
 .list {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: 1rem;
+	overflow: auto;
 	padding-bottom: px2rem(50);
 	font-size: 15px;
 	.van-popup {
@@ -242,7 +272,7 @@ export default {
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: 50px;
+		bottom: 0;
 		background-color: #fff;
 		display: flex;
 		justify-content: space-between;
@@ -278,7 +308,7 @@ export default {
 		}
 	}
 	.li-wrap {
-		padding: px2rem(20) px2rem(8) px2rem(10);
+		padding: px2rem(20) px2rem(8) px2rem(5);
 		background-color: #fff;
 		margin-bottom: px2rem(10);
 		.title {
@@ -299,6 +329,11 @@ export default {
 					padding-left: px2rem(18);
 					padding-right: px2rem(7);
 					background-size: 30% 60%;
+				}
+				h2 {
+					margin-left: .1rem;
+					font-size: px2rem(18);
+					line-height: px2rem(24);
 				}
 			}
 			.rect {

@@ -3,10 +3,8 @@
 			<van-nav-bar
 				:title="mestTitle"
 				:border="false"
-				left-arrow
-				@click-left="onClickLeft"
 			></van-nav-bar>
-			<ul v-if="itemType === 'A'">
+			<ul>
 				<li v-for="item in list" :key="item.id" @click="onClickItem(item.name)">
 					<div>
 						<span>{{ item.name.slice(-1) }}</span>
@@ -15,12 +13,27 @@
 					<van-icon name="arrow" />
 				</li>
 			</ul>
-			<ul class="item-wrap" v-else>
-				<li v-for="item in detailList" :key="item.id" @click="onClickDetail(item.id)">
-					<div><strong>{{ item.value }}</strong></div>
-					<i class="iconfont" @click="onClickDelete($event, item.id)">&#xe64c;</i>
-				</li>
-			</ul>
+
+			<van-popup
+				v-model="itemToggle"
+				position="right"
+				closeable
+				close-icon="arrow-left"
+				close-icon-position="top-left"
+				:style="{ width: '100%', height: '100%' }"
+			>
+				<div class="item-wrap">
+					<h4>{{ mestTitle }}</h4>
+					<ul class="item-wrap">
+						<li v-for="item in detailList" :key="item.id" @click="onClickDetail(item.id)">
+							<div><strong>{{ item.value }}</strong></div>
+							<i class="iconfont" @click="onClickDelete($event, item.id)">&#xe64c;</i>
+						</li>
+					</ul>
+				</div>				
+			</van-popup>
+
+
 	</div>
 </template>
 
@@ -30,6 +43,7 @@ export default {
 	name: 'report',
 	data() {
 		return {
+			itemToggle: false,
 			mestTitle: '我的报告',
 			itemType: 'A',
 			list: [{
@@ -71,7 +85,8 @@ export default {
 		},
 		onClickItem(name) {
 			this.mestTitle = name
-			this.itemType = ''
+			// this.itemType = ''
+			this.itemToggle = true
 		},
 		onClickDetail(id) {
 			console.log('进入详情页' + id)
@@ -122,13 +137,20 @@ export default {
 		}
 	}
 	.item-wrap {
-		border-top: 1px solid #dce2f4;
-		li {
-			border-bottom: 1px solid #dce2f4;
-			margin: 0 px2rem(10);
-			padding: px2rem(10) 0;
-			strong {
-				font-size: px2rem(14);
+		h4 {
+			font-size: px2rem(18);
+			line-height: px2rem(44);
+			text-align: center;
+		}
+		ul {
+			border-top: 1px solid #dce2f4;
+			li {
+				border-bottom: 1px solid #dce2f4;
+				margin: 0 px2rem(10);
+				padding: px2rem(10) 0;
+				strong {
+					font-size: px2rem(14);
+				}
 			}
 		}
 	}

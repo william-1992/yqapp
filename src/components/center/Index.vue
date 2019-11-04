@@ -1,5 +1,5 @@
 <template>
-	<div class="center">
+	<div class="center-wrap">
 		<search></search>
 		<van-tabs v-model="active" :line-width="14" title-active-color="#323948" title-inactive-color="#d3dbeb" :border='false' @change="getTabs">
 			<van-tab v-for="item in list" :title="item.title" :key="item.id"></van-tab>
@@ -52,7 +52,7 @@ export default {
 <style lang="scss" scoped>
 @import '@css/constants.scss';
 
-.center {
+.center-wrap {
 	p {
 		font-size: px2rem(14)
 	}
@@ -62,7 +62,8 @@ export default {
 	.van-tab__pane, .van-tab__pane-wrapper {
 		font-size: px2rem(18)
 	}
-	/deep/.van-tabs--line .van-tabs__wrap {
+	/deep/.van-tabs--line .van-tabs__line {
+		bottom: px2rem(18)
 	}
 }
 </style>

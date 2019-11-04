@@ -11,7 +11,9 @@
 			<ul>
 				<li v-for="item in list" :key="item.id" @click='handleClick(item.id)'>
 					<div class="nav-text">
-						<i class="iconfont" v-html="item.icon">{{item.icon}}</i>{{item.title}}
+						<!-- <i class="iconfont" v-html="item.icon">{{item.icon}}</i> -->
+						<img :src="item.url">
+						{{item.title}}
 					</div>
 					<div class="nav-core">
 						<van-icon name="arrow" />
@@ -20,31 +22,81 @@
 			</ul>
 		</div>
 
+		<van-popup
+			v-model="collToggle"
+			closeable
+			close-icon="arrow-left"
+			close-icon-position="top-left"
+			position="right"
+			@close="onClickClose"
+			:style="{ height: '100%', width: '100%', backgroundColor: '#f7f9fe' }"
+		>
+			<collection />
+		</van-popup>
+
+		<van-popup
+			v-model="reportToggle"
+			closeable
+			close-icon="arrow-left"
+			close-icon-position="top-left"
+			position="right"
+			@close="onClickClose"
+			:style="{ height: '100%', width: '100%' }"
+		>
+			<report />
+		</van-popup>
+
 	</div>
 </template>
 
 <script>
 import { Dialog } from 'vant';
+import Collection from '@c/mine/Collection';
+import Report from '@c/mine/Report';
 export default {
 	name: 'mine',
+	components: {
+		Collection,
+		Report
+	},
 	data() {
 		return {
+			reportToggle: false,
+			collToggle: false,
 			list: [{
 				id: 'A',
 				icon: '&#xe617;',
-				title: '我的报告'
+				title: '我的报告',
+				url: require('@img/report.png')
 			}, {
 				id: 'B',
 				icon: '&#xe73a;',
-				title: '我的收藏'
+				title: '我的收藏',
+				url: require('@img/hobrt.png')
 			}, {
 				id: 'C',
 				icon: '&#xe639;',
-				title: '退出登录'
+				title: '退出登录',
+				url: require('@img/close.png')
 			}]
 		}
 	},
 	methods: {
+		onClickClose() {
+			if(window.plus) {
+				this.plusReady2()
+			}else {
+				document.addEventListener('plusready', this.plusReady2, false)
+			}
+		},
+		plusReady() {
+			plus.navigator.setStatusBarBackground('#ffffff');
+			plus.navigator.setStatusBarStyle('dark');
+		},
+		plusReady2() {
+			plus.navigator.setStatusBarBackground('#8091bb');
+			plus.navigator.setStatusBarStyle('light');
+		},
 		handleClick(type) {
 			if(type === 'C') {
 				Dialog.confirm({
@@ -55,9 +107,20 @@ export default {
 				}).catch(() => {
 					console.log('取消退出')
 				})
+			}else if(type === 'B') {
+				this.collToggle = true
+				if(window.plus) {
+					this.plusReady()
+				}else {
+					document.addEventListener('plusready', this.plusReady, false )
+				}
 			}else {
-				this.$store.commit('handleMesType', type)
-				this.$store.commit('handleToolbar', false)
+				this.reportToggle = true
+				if(window.plus) {
+					this.plusReady()
+				}else {
+					document.addEventListener('plusready', this.plusReady, false )
+				}
 			}
 		}
 	}
@@ -72,7 +135,7 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		background: url('~@img/mine_bg.png');
+		background: -webkit-gradient(linear, 0 0, 0 100%, from(#8091bb), to(#4e5a78));
 		.left {
 			font-size: px2rem(20);
 			color: #fff;
@@ -105,6 +168,10 @@ export default {
 				font-size: px2rem(14);
 				display: flex;
 				align-items: center;
+				img {
+					width: px2rem(22);
+					margin-right: px2rem(8);
+				}
 				i {
 					width: px2rem(26);
 					text-align: center;

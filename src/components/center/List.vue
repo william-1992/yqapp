@@ -1,5 +1,5 @@
 <template>
-	<div class="list">
+	<div class="list" :style="{ paddingTop: paddingTT + 'px' }">
 
 		<van-list
 		  v-model="loading"
@@ -11,7 +11,7 @@
 		<van-swipe-cell v-for="item in newlist" :key="item.id" >
 
 			<!-- <van-cell :border="false"> -->
-				<div class="li-wrap" @click="openDetail(item.id)">
+				<div class="li-wrap">
 					<div class="title">
 						<div class="left">
 							<van-checkbox 
@@ -20,7 +20,7 @@
 								:key="item.id" 
 								:name="item.id" 
 								checked-color="#ff6651"
-								@change="onClickRadio(item.id)"
+								@click.stop="onClickRadio(item.id)"
 							></van-checkbox>
 							<div class="rect">{{ item.type }}</div>
 							<div class="frie" @click.stop="onLinkEvent(item.id)">{{ item.number }}</div>
@@ -40,7 +40,7 @@
 							首次收录： {{item.firstTime}}
 						</div>
 					</div>
-					<div class="desc">
+					<div class="desc" @click="openDetail(item.id)">
 						<p>{{item.des}}</p>
 					</div>
 					<div class="tags">
@@ -71,8 +71,8 @@
 		<div class="allSelect" v-show="checkboxToggleCenter">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
 			<div class="btn-wrap">
-				<van-button color="#6f7ea0" plain size="small">删除</van-button>
-				<van-button color="#6f7ea0" size="small">推送</van-button>
+				<van-button color="#6f7ea0" plain size="small" @click="onClickDelete">删除</van-button>
+				<van-button color="#6f7ea0" size="small" @click="onClickPush">推送</van-button>
 			</div>
 		</div>
 
@@ -102,7 +102,8 @@
 </template>
 
 <script>
-import {mapState} from 'vuex';
+import { mapState } from 'vuex';
+import { Toast } from 'vant';
 import Detail from '@c/common/Detail';
 import EventList from '@c/center/EventList';
 export default {
@@ -176,7 +177,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['checkboxToggleCenter'])
+		...mapState(['checkboxToggleCenter', 'paddingTT'])
 	},
 	watch: {
 		allchecked(val) {
@@ -217,6 +218,32 @@ export default {
     onLinkEvent(id) {
     	console.log(id)
     	this.showLinkEventToggle = true
+    },
+    onClickPush() {
+    	let arr = []
+    	for(let i = 0; i<this.newlist.length; i++) {
+    		if(this.newlist[i].checked) {
+    			arr.push(this.newlist[i].id)
+    		}
+    	}
+    	if(arr.length > 0) {
+    		// 走接口
+    	}else {
+    		Toast('你还没有选择事件哦')
+    	}
+    }, 
+    onClickDelete() {
+    	let arr = []
+    	for(let i = 0; i<this.newlist.length; i++) {
+    		if(this.newlist[i].checked) {
+    			arr.push(this.newlist[i].id)
+    		}
+    	}
+    	if(arr.length > 0) {
+    		// 走接口
+    	}else {
+    		Toast('你还没有选择事件哦')
+    	}
     }
 	}
 }
@@ -234,7 +261,7 @@ export default {
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: px2rem(50);
+		bottom: 50px;
 		background-color: #fff;
 		display: flex;
 		justify-content: space-between;
@@ -290,6 +317,7 @@ export default {
 					background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 					padding-left: px2rem(18);
 					padding-right: px2rem(7);
+					background-size: 30% 60%;
 				}
 			}
 			.rect {

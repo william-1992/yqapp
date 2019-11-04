@@ -5,6 +5,9 @@ $rootFootSize: 375 / 10;
 	@return $px / $rootFootSize + rem
 }
 
+// 刘海屏顶部top值
+$paddingT: px2rem(0);
+
 // 搜索标题字号
 $searchTitleSize: px2rem(20);
 

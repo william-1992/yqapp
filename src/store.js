@@ -12,13 +12,15 @@ export default new Vuex.Store({
   	home_tabs_name: '监测中心',
   	mesType: '',
     isComponent: 'center',
-    toolbarToggle: true,   // 底部标签栏开关
-    popupToggle: false,   // 搜索页面开关
+    paddingTT: 0,                  // 状态栏高度
+    toolbarToggle: true,           // 底部标签栏开关
+    popupToggle: false,            // 搜索页面开关
     checkboxToggleCenter: false,   // 中心复选框开关
-    checkboxToggleCity: false,   // 城市复选框开关
-    showPicker: false,     // 地址弹框开关
-    pickerName: '杭州',     // 当前地址名
-    overlayToggle: false,   // 遮罩开关
+    checkboxToggleCity: false,     // 城市复选框开关
+    checkboxToggleColl: false,     // 我的收藏复选框开关
+    showPicker: false,             // 地址弹框开关
+    pickerName: '杭州',            // 当前地址名
+    overlayToggle: false,          // 遮罩开关
 
   },
   mutations: {
@@ -43,6 +45,9 @@ export default new Vuex.Store({
     handleCheckboxCity(state, val) {
       state.checkboxToggleCity = val
     },
+    handleCheckboxColl(state, val) {
+      state.checkboxToggleColl = val
+    },
     handleAddress(state, val) {
       state.showPicker = val
     },
@@ -51,6 +56,9 @@ export default new Vuex.Store({
     },
     handleOverlay(state, val) {
       state.overlayToggle = val
+    },
+    handlePadding(state, val) {
+      state.paddingTT = val
     }
   },
   actions: {}

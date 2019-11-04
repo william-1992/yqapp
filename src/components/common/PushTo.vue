@@ -62,6 +62,10 @@ export default {
 <style lang="scss" scoped>
 @import '@css/constants.scss';
 .push-to {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
 	ul>li {
 		display: inline-block;
 		margin: px2rem(20) px2rem(15) 0;

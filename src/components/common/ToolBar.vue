@@ -18,23 +18,23 @@ export default {
 			componentName: 'center',
 			list: [{
 				title: '监测中心',
-				default: require('@img/nav-center.png'),
-				checked: require('@img/nav-center-checked.png'),
+				default: require('@img/nav-center1.png'),
+				checked: require('@img/nav-center2.png'),
 				name: 'center'
 			}, {
 				title: '消息',
-				default: require('@img/nav-message.png'),
-				checked: require('@img/nav-message-checked.png'),
+				default: require('@img/nav-message1.png'),
+				checked: require('@img/nav-message2.png'),
 				name: 'message'
 			}, {
 				title: '城市舆情',
-				default: require('@img/nav-city.png'),
-				checked: require('@img/nav-city-checked.png'),
+				default: require('@img/nav-city1.png'),
+				checked: require('@img/nav-city2.png'),
 				name: 'city'
 			}, {
 				title: '我的',
-				default: require('@img/nav-mine.png'),
-				checked: require('@img/nav-mine-checked.png'),
+				default: require('@img/nav-mine1.png'),
+				checked: require('@img/nav-mine2.png'),
 				name: 'mine'
 			}]
 		}

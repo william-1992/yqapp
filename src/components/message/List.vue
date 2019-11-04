@@ -15,7 +15,7 @@
 			<div class="sign-type sign03" v-else><span>一般</span></div>
 
 			<!-- <van-cell :border="false"> -->
-			<div class="li-wrap" @click="openDetail(item.id)">
+			<div class="li-wrap">
 				<div class="title">
 					<div class="left">
 						<van-checkbox 
@@ -45,7 +45,7 @@
 						首次收录： {{item.firstTime}}
 					</div>
 				</div>
-				<div class="desc">
+				<div class="desc" @click="openDetail(item.id)">
 					<p>{{item.des}}</p>
 				</div>
 				<div class="tags">
@@ -329,7 +329,7 @@ export default {
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: px2rem(50);
+		bottom: px2rem(46);
 		background-color: #fff;
 		display: flex;
 		justify-content: space-between;
@@ -347,7 +347,7 @@ export default {
 			position: absolute;
 			right: 0;
 			top: 0;
-			background: url('~@img/urgent.png');
+			background: url('~@img/urgent.png') no-repeat right top;
 			text-align: right;
 			color: #fff;
 			span {
@@ -407,6 +407,7 @@ export default {
 					background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 					padding-left: px2rem(18);
 					padding-right: px2rem(7);
+					background-size: 30% 60%;
 				}
 				h2 {
 					font-size: px2rem(18);
@@ -486,6 +487,9 @@ export default {
 				p {
 					font-size: px2rem(14);
 					line-height: px2rem(26)
+				}
+				img {
+					width: px2rem(61);
 				}
 			}
 			.upcome-btn {

@@ -1,7 +1,7 @@
 <template>
 	<div class="search">
 		<h1>{{ name }}</h1>
-		<p v-if="checkboxToggleCenter">
+		<p v-if="name === '监测中心'">
 			<span class="iconfont" @click="onClickPopup">&#xe605;</span>
 			<span v-if="checkboxToggleCenter == true" @click="setUp(2)">完成</span>
 			<span @click="setUp(1)" v-else>管理</span>
@@ -20,7 +20,7 @@
 		  :overlay="false"
 		  :style="{ height: '100%', width: '100%' }"
 		>
-			<div class="pop-wrap">
+			<div class="pop-wrap" :style="{ paddingTop: paddingTT + 'px' }">
 
 				<div class="search-wrap">
 					<van-icon name="arrow-left" @click="onClickBack"></van-icon>
@@ -31,7 +31,6 @@
 					  v-model="value"
 					  placeholder="请输入搜索关键词"
 					  show-action
-					  shape="round"
 					  @search="onSearch"
 					>
 					  <div slot="action" @click="onSearch">搜索</div>
@@ -82,7 +81,8 @@ export default {
 		...mapState({
 			name: state => state.home_tabs_name,
 			checkboxToggleCenter: state => state.checkboxToggleCenter,
-			checkboxToggleCity: state => state.checkboxToggleCity
+			checkboxToggleCity: state => state.checkboxToggleCity,
+			paddingTT: state => state.paddingTT
 		})
 	},
 	methods: {
@@ -129,8 +129,10 @@ export default {
 	p {
 		font-size: px2rem(16);
 		line-height: px2rem(22);
+		span {
+			padding: 0 px2rem(10);
+		}
 		.iconfont {
-			margin-right: px2rem(15);
 			font-size: px2rem(20);
 		}
 		span:last-child {
@@ -174,12 +176,12 @@ export default {
 			}
 		}
 		ul {
-			margin-top: px2rem(10);
+			margin-top: px2rem(15);
 		}
 		ul>li>a{
 			font-size: px2rem(14);
 			color: $activeColor;
-			line-height: px2rem(34);
+			line-height: px2rem(40);
 		}
 	}
 }
