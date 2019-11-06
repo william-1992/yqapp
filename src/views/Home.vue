@@ -1,17 +1,25 @@
 <template>
   <div class="home">
-  	<keep-alive>
-  		<component :is="isComponent"></component>
-  	</keep-alive>
-    <tool-bar v-show="toolbarToggle"></tool-bar>
-    <!-- <popup></popup> -->
-    <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
-    <picker></picker>
+
+    <login v-if="loginToggle"></login>
+
+    <div v-else>
+    	<keep-alive :max="5">
+    		<component :is="isComponent"></component>
+    	</keep-alive>
+
+
+      <tool-bar v-show="toolbarToggle"></tool-bar>
+      <!-- <popup></popup> -->
+      <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
+      <picker></picker>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import Login from './Login';
 import ToolBar from '@c/common/ToolBar';
 import Center from '@c/Center';
 import City from '@c/City';
@@ -22,6 +30,7 @@ import Picker from '@c/common/Picker';
 export default {
   name: "home",
   components: {
+    Login,
     ToolBar,
     Popup,
     Picker,
@@ -36,7 +45,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle'])
+    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle'])
   },
   mounted() {
 
@@ -58,7 +67,7 @@ export default {
     　plus.navigator.setStatusBarBackground( "#ffffff" );
       plus.navigator.setStatusBarStyle('dark');
       let navH = plus.navigator.getStatusbarHeight();
-      alert(navH)
+      //alert(navH)
     },
     closeOverlay() {
       this.$store.commit('handleOverlay', false)

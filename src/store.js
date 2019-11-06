@@ -12,6 +12,7 @@ export default new Vuex.Store({
   	home_tabs_name: '监测中心',
   	mesType: '',
     isComponent: 'center',
+    loginToggle: true,             // 登陆状态判断
     paddingTT: 0,                  // 状态栏高度
     toolbarToggle: true,           // 底部标签栏开关
     popupToggle: false,            // 搜索页面开关
@@ -24,6 +25,9 @@ export default new Vuex.Store({
 
   },
   mutations: {
+    handleLogin(state, val) {
+      state.loginToggle = val
+    },
   	handleHoneTabsName(state, val) {
   		state.home_tabs_name = val
   	},

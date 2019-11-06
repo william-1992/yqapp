@@ -59,6 +59,7 @@ export default {
 		Collection,
 		Report
 	},
+	inject: ['reload'],
 	data() {
 		return {
 			reportToggle: false,
@@ -101,9 +102,11 @@ export default {
 			if(type === 'C') {
 				Dialog.confirm({
 					message: '确定退出？',
-					confirmButtonText: '退出'
+					confirmButtonText: '退出',
+					className: 'dialogtext'
 				}).then(() => {
-					console.log('退出成功')
+					this.reload()
+					// this.$store.commit('handleLogin', true)
 				}).catch(() => {
 					console.log('取消退出')
 				})

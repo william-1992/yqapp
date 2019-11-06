@@ -14,19 +14,28 @@
 			<push-page></push-page>
 		</van-popup>
 
+		<van-popup v-model="pushpageTwoToggle" closeable close-icon-position="top-left" position="right" :style="{ height: '100%', width: '100%' }">
+			<push-page-two></push-page-two>
+		</van-popup>
+
 	</div>
 </template>
 
 <script>
+import { Toast } from 'vant';
 import PushPage from '@c/common/PushPage';
+import PushPageTwo from '@c/common/PushPageTwo';
 export default {
 	name: 'pushto',
 	components: {
-		PushPage
+		PushPage,
+		PushPageTwo
 	},
 	data() {
 		return {
 			pushpageToggle: false,
+			pushpageTwoToggle: false,
+			pushpageType: '1',
 			pushlist: [{
 				id: 1,
 				title: '鲨舆',
@@ -50,9 +59,9 @@ export default {
 			if(index === 0) {
 				this.pushpageToggle = true
 			}else if(index === 1) {
-
+				this.pushpageTwoToggle = true
 			}else {
-
+				Toast.success('复制成功')
 			}
 		}
 	}

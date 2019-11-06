@@ -15,6 +15,7 @@
 		<section>
 			<div class="staff-title">
 				<h3>卫数科技有限公司</h3>
+				<van-checkbox v-model="checked"></van-checkbox>
 			</div>
 			<van-collapse v-model="activeNames" class="staff-content">
 			  <van-collapse-item title="标题1" name="1">
@@ -40,6 +41,13 @@
 			  <!-- <van-collapse-item title="标题2" name="2">内容</van-collapse-item>
 			  <van-collapse-item title="标题3" name="3">内容</van-collapse-item> -->
 			</van-collapse>
+		</section>
+		<section class="send-wrap">
+			<p>请选择发送方式</p>
+			<van-radio-group v-model="sendradio">
+			  <van-radio name="1" checked-color="#ff6651">邮件</van-radio>
+			  <van-radio name="2" checked-color="#ff6651">短信</van-radio>
+			</van-radio-group>
 		</section>
 		<section class="textarea-wrap">
 			  <van-field
@@ -77,19 +85,6 @@ export default {
 		onClickDelete(index) {
 			this.result.splice(index, 1)
 		}
-	},
-	mounted() {
-		console.log('1')
-	},
-	activated() {
-		console.log('1')
-
-		this.result = []
-	},
-	destroyed() {
-		console.log('1')
-
-		this.result = []
 	}
 }
 </script>
