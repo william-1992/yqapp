@@ -21,7 +21,7 @@
 			<van-tabbar v-model="active" active-color='#4e5a78'>
 			  <van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
 			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
-			  <van-tabbar-item @click="onChange(2)"><i class="iconfont">&#xe66c;</i><span>删除</span></van-tabbar-item>
+			  <van-tabbar-item v-if="deletebtn" @click="onChange(2)"><i class="iconfont">&#xe66c;</i><span>删除</span></van-tabbar-item>
 			</van-tabbar>
 		</div>
 
@@ -37,7 +37,7 @@
 
 		<div class="de-push">
 			<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
-				<push-to @closeThis="closePush"></push-to>
+				<push-to @closeThis="closePush" :idlist="[...detailid]" :eventlist="[...eventid]"></push-to>
 			</van-popup>
 		</div>
 
@@ -46,12 +46,17 @@
 
 <script>
 import { mapState } from 'vuex';
-import { Dialog } from 'vant';
+import { Dialog, Toast } from 'vant';
 import PushTo from '@c/common/PushTo';
 export default {
-	name: 'detail-new',
+	name: 'detail',
 	components: {
 		PushTo
+	},
+	props: {
+		detailid: String,
+		eventid: String,
+		deletebtn: Boolean
 	},
 	data() {
 		return {
@@ -66,6 +71,7 @@ export default {
 		...mapState(['paddingTT'])
 	},
 	mounted() {
+		this.getDetailData()
 		// this.scroll = new Bscroll(this.$refs.wrapper, {mouseWheel: true, click: true, tag: true})
 		this.timer = setInterval(() => {
 			if(this.fontToggle) {
@@ -74,6 +80,19 @@ export default {
 		}, 20000)
 	},
 	methods: {
+		getDetailData() {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/City/webcache',
+				data: {
+					uid: this.$store.state.userid
+				}
+			}).then((res) => {
+				
+			}).catch((res) => {
+				Toast.fail(res.msg)
+			})
+		},
 		closePush() {
 			this.pushToggle = false
 		},
@@ -81,16 +100,19 @@ export default {
 			if(value === 0) {
 				this.pushToggle = true
 			}else if(value === 1) {
-
-			}else {
-				Dialog.confirm({
-				  message: '确定要删除该信息？',
-				  confirmButtonText: '删除'
-				}).then(() => {
-				  // on confirm
-				}).catch(() => {
-				  // on cancel
-				});
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/favorite',
+					data: {
+						uid: this.$store.state.userid,
+						main_id: this.detailid,
+						event_id: this.eventid
+					}
+				}).then((res) => {
+					Toast.success(res.data.msg)
+				}).then((res) => {
+					Toast.fill(res.data.msg)
+				})
 			}
 		},
 		onClickFont() {

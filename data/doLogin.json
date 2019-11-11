@@ -1,0 +1,18 @@
+{
+	"status": 1,
+	"msg": "",
+	"data": {
+		"login": {
+			"id": "93",
+			"pid": "0",
+			"username": "dengjin",
+			"mobile": "571",
+			"nickname": "鄧金",
+			"role_id": "0",
+			"identity": "1",
+			"company_name": "杭州衛戍科技信息技術有限公司",
+			"company_short_name": "衛戍科技"
+		}
+	},
+	"code": 0
+}

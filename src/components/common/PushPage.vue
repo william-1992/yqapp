@@ -59,6 +59,10 @@
 <script>
 export default {
 	name: 'push-page',
+	props: {
+		idlist: Array,
+		eventlist: Array
+	},
 	data() {
 		return {
 			sendradio: '1',

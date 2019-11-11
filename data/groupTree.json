@@ -1,0 +1,99 @@
+{
+	"status": 1,
+	"msg": "",
+	"data": {
+		"groupTree": [{
+				"id": "250",
+				"pid": "0",
+				"level": "1",
+				"type": "0",
+				"state": "1",
+				"title": "超市",
+				"uid": "93",
+				"self_path": "001",
+				"tree_path": "001",
+				"remark": "",
+				"add_time": "1551844079",
+				"up_time": null,
+				"status": "1"
+			},
+			{
+				"id": "252",
+				"pid": "0",
+				"level": "1",
+				"type": "0",
+				"state": "1",
+				"title": "食堂",
+				"uid": "93",
+				"self_path": "001",
+				"tree_path": "001",
+				"remark": "",
+				"add_time": "1551844079",
+				"up_time": null,
+				"status": "1"
+			}
+		],
+		"userList": [{
+				"id": "184",
+				"uid": "93",
+				"groupid": "250",
+				"name": "张小龙",
+				"mobile": "15822223333",
+				"email": "2222@3333.com",
+				"position": "衛生部經理",
+				"add_time": "1551844151",
+				"up_time": "1551844151",
+				"tree_path": "001"
+			},
+			{
+				"id": "183",
+				"uid": "93",
+				"groupid": "250",
+				"name": "张二狗",
+				"mobile": "15812341234",
+				"email": "1234@1234.com",
+				"position": "招商部主管",
+				"add_time": "1551844112",
+				"up_time": "1551844112",
+				"tree_path": "001"
+			},
+			{
+				"id": "182",
+				"uid": "93",
+				"groupid": "252",
+				"name": "阿大",
+				"mobile": "15812341234",
+				"email": "1234@1234.com",
+				"position": "廚師長",
+				"add_time": "1551844112",
+				"up_time": "1551844112",
+				"tree_path": "001"
+			},
+			{
+				"id": "181",
+				"uid": "93",
+				"groupid": "252",
+				"name": "阿二",
+				"mobile": "15812341234",
+				"email": "1234@1234.com",
+				"position": "前台經理",
+				"add_time": "1551844112",
+				"up_time": "1551844112",
+				"tree_path": "001"
+			},
+			{
+				"id": "180",
+				"uid": "93",
+				"groupid": "252",
+				"name": "阿三",
+				"mobile": "15812341234",
+				"email": "1234@1234.com",
+				"position": "服務員",
+				"add_time": "1551844112",
+				"up_time": "1551844112",
+				"tree_path": "001"
+			}
+		]
+	},
+	"code": 0
+}

@@ -1,8 +1,8 @@
 <template>
 	<div class="city-index">
 		<search></search>
-		<hottest hotType="citypage"></hottest>
-		<text-list></text-list>
+		<hottest hotType="citypage" @get-type="getType"></hottest>
+		<text-list :cityhot="cityHotType"></text-list>
 	</div>
 </template>
 
@@ -19,7 +19,12 @@ export default {
 	},
 	data() {
 		return {
-
+			cityHotType: '1'
+		}
+	},
+	methods: {
+		getType(val) {
+			this.cityHotType = val
 		}
 	}
 }

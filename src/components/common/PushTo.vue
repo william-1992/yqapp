@@ -10,12 +10,26 @@
 			<van-button type="default" size="large" @click="onClose">取消</van-button>
 		</footer>
 
-		<van-popup v-model="pushpageToggle" closeable close-icon-position="top-left" position="right" :style="{ height: '100%', width: '100%' }">
-			<push-page></push-page>
+		<van-popup 
+			v-model="pushpageToggle" 
+			:overlay="false"
+			closeable 
+			close-icon-position="top-left" 
+			position="right" 
+			:style="{ height: '100%', width: '100%' }"
+		>
+			<push-page :idlist="idlist" :eventlist="eventlist"></push-page>
 		</van-popup>
 
-		<van-popup v-model="pushpageTwoToggle" closeable close-icon-position="top-left" position="right" :style="{ height: '100%', width: '100%' }">
-			<push-page-two></push-page-two>
+		<van-popup 
+			v-model="pushpageTwoToggle" 
+			:overlay="false"
+			closeable 
+			close-icon-position="top-left" 
+			position="right" 
+			:style="{ height: '100%', width: '100%' }"
+		>
+			<push-page-two :idlist="idlist" :eventlist="eventlist"></push-page-two>
 		</van-popup>
 
 	</div>
@@ -27,6 +41,10 @@ import PushPage from '@c/common/PushPage';
 import PushPageTwo from '@c/common/PushPageTwo';
 export default {
 	name: 'pushto',
+	props: {
+		idlist: Array,
+		eventlist: Array
+	},
 	components: {
 		PushPage,
 		PushPageTwo

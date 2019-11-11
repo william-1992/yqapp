@@ -1,77 +1,9 @@
 <template>
 	<div class="event-list">
 		<van-steps direction="vertical" :active="active" active-color="#969799">
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态1</h3>
-		    <p>2016-07-12 12:40</p>
-		  </van-step>
-		  <van-step>
-		    <h3>【城市】物流状态2</h3>
-		    <p>2016-07-11 10:00</p>
-		  </van-step>
-		  <van-step>
-		    <h3>快件已发货</h3>
-		    <p>2016-07-10 09:30</p>
+		  <van-step v-for="item in eventList" :key="item.docid">
+		    <h3>{{ item.event_title | titleLength }}</h3>
+		    <p>{{ item.timeStr }}</p>
 		  </van-step>
 		</van-steps>
 	</div>
@@ -80,12 +12,53 @@
 <script>
 export default {
 	name: 'event-list',
+	props: {
+		eid: String,
+		aid: Number
+	},
 	data() {
 		return {
-			active: 0
+			active: 0,
+			eventList: []
+		}
+	},
+	filters: {
+		titleLength(val) {
+			return val.slice(0, 20) + '...'
+		}
+	},
+	watch: {
+		eid(val) {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/City/context',
+				data: {
+					uid: this.$store.state.userid,
+					event_id: this.eid,
+					areaid: this.aid
+				}
+			}).then((res) => {
+				console.log(res.data)
+			}).catch((res) => {
+				
+			})
 		}
 	},
 	mounted() {
+		this.$axios({
+			method: 'post',
+			url: '/index.php/City/context',
+			data: {
+				uid: this.$store.state.userid,
+				event_id: this.eid,
+				areaid: this.aid
+			}
+		}).then((res) => {
+			this.eventList = res.data.data.list
+			console.log(res.data)
+		}).catch((res) => {
+			
+		})	
 	}
 }
 </script>

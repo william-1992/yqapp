@@ -8,7 +8,9 @@
 export default {
 	data() {
 		return {
-			isReload: true
+			isReload: true,
+			arrtry: [1,2,3,4,5,4,3,2,1,12,23,56,32],
+			arrend: []
 		}
 	},
 	provide() {
@@ -16,7 +18,19 @@ export default {
 			reload: this.reload
 		}
 	},
+	mounted() {
+		this.arrend = this.unique(this.arrtry)
+	},
 	methods: {
+		unique(arr) {
+			let result = []
+			for(let i=0; i<arr.length; i++) {
+				if(result.indexOf(arr[i]) == -1) {
+					result.push(arr[i])
+				}
+			}
+			return result
+		},
 		reload() {
 			this.isReload = false
 			this.$nextTick(function() {

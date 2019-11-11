@@ -1,7 +1,7 @@
 <template>
 	<div class="hot-test">
 		<div class="left">
-			<span v-for="(item, index) in list" :key="item.id" :class="item.className" @click="onClickHandle(index)">
+			<span v-for="(item, index) in list" :key="item.id" :class="item.className" @click="onClickHandle(index, item.id)">
 				{{item.title}}
 			</span>
 		</div>
@@ -61,11 +61,16 @@ export default {
 		...mapState(['pickerName'])
 	},
 	methods: {
-		onClickHandle(index) {
+		onClickHandle(index, id) {
 			this.list.forEach((item) => {
 				item.className = ''
 			})
 			this.list[index].className = 'active'
+			if(id == '1') {
+				this.$emit('get-type', id)
+			}else {
+				this.$emit('get-type', id)
+			}
 		},
 		onClickAddress() {
       		this.$store.commit('handleOverlay', true)

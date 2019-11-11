@@ -9,9 +9,13 @@ export default new Vuex.Store({
     area
   },
   state: {
-  	home_tabs_name: '监测中心',
+	userid: '',						// 用户ID
+	nickname: '',                   // 用户名称（中文）
+	company_name: '',				// 公司名称
+	company_short_name: '',         // 公司簡稱
+  	home_tabs_name: '监测中心',		// 搜索组件title值
   	mesType: '',
-    isComponent: 'center',
+    isComponent: 'center',         // Tabbar当前显示页面
     loginToggle: true,             // 登陆状态判断
     paddingTT: 0,                  // 状态栏高度
     toolbarToggle: true,           // 底部标签栏开关

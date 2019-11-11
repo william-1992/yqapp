@@ -2,10 +2,10 @@
 	<div class="mine">
 		<div class="title">
 			<div class="left">
-				<h5>宋大大</h5>
-				<p>卫数科技有限公司</p>
+				<h5>{{ nickname }}</h5>
+				<p>{{ company_name }}</p>
 			</div>
-			<div class="right">宋</div>
+			<div class="right">{{ nickname.slice(0, 1) }}</div>
 		</div>
 		<div class="list-nav">
 			<ul>
@@ -51,6 +51,7 @@
 
 <script>
 import { Dialog } from 'vant';
+import { mapState } from 'vuex';
 import Collection from '@c/mine/Collection';
 import Report from '@c/mine/Report';
 export default {
@@ -60,6 +61,9 @@ export default {
 		Report
 	},
 	inject: ['reload'],
+	computed: {
+		...mapState(['nickname', 'company_name'])
+	},
 	data() {
 		return {
 			reportToggle: false,
@@ -106,7 +110,7 @@ export default {
 					className: 'dialogtext'
 				}).then(() => {
 					this.reload()
-					// this.$store.commit('handleLogin', true)
+					this.$store.commit('handleLogin', true)
 				}).catch(() => {
 					console.log('取消退出')
 				})

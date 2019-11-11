@@ -1,0 +1,45 @@
+{
+  "status": 1,
+  "msg": "",
+  "data": {
+    "num": 2,
+    "top": {
+      "start": {
+        "docid": "8971170457723408483",
+        "time": "1570780303",
+        "event_title": "甘肃省完成实际收到了都是漏洞落实力度收到",
+        "event_url": "http://www.gov.cn/xinwen/2018-12/13/content_5348525.htm",
+        "timeStr": "2018-12-13 18:56:53",
+        "site_name": "中国振幅网"
+      },
+      "end": {
+        "docid": "9128796444681377049",
+        "time": "1570780524",
+        "event_title": "河北省是滴熟练地记得连扫地机拉水电费水电费",
+        "event_url": "http://finance.jrj.com.cn/2018/12/13173526736130.shtml",
+        "timeStr": "2018-12-13 19:03:53",
+        "site_name": "河北网"
+	  }
+    },
+    "list": [
+      {
+        "docid": "9128796444681377049",
+        "time": "1570780524",
+        "event_title": "甘12肃省3完成实4际收5到了都是漏洞落实力度收到",
+        "event_url": "http://finance.jrj.com.cn/2018/12/13173526736130.shtml",
+        "timeStr": "2018-12-13 19:03:53",
+        "site_name": "中国振幅网"
+      },
+      {
+        "docid": "8971170457723408483",
+        "time": "1570780303",
+        "event_title": "河北省是滴熟练地记得连扫地机拉水电费水电费",
+        "event_url": "http://www.gov.cn/xinwen/2018-12/13/content_5348525.htm",
+        "timeStr": "2018-12-13 18:56:53",
+        "site_name": "中国振幅网"
+      }
+    ],
+    "trueNum": 2
+  },
+  "code": 0
+}
