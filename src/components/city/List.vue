@@ -109,7 +109,8 @@
 				area_id: '',
 				detail_id: '',
 				idList: [],
-				eventidList: []
+				eventidList: [],
+				page: 2
 			}
 		},
 		computed: {
@@ -185,27 +186,44 @@
 				}).then((res) => {
 					this.newlist = res.data.data.eventList
 				}).catch(() => {
-
+					Toast.fail(res.data.msg)
 				})
 			},
 			onClickRadio(id) {
 				console.log(id)
 			},
 			onLoad() {
-				// console.log('load')
 				// 异步更新数据
 				setTimeout(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/getESearch',
+						data: {
+							uid: this.$store.state.userid,
+							page: this.page
+						}
+					}).then((res) => {
+						if(res.data.data.eventList.length > 0) {
+							this.newlist = this.newlist.concat(res.data.data.eventList)
+							this.page++
+						}else {
+							this.finished = true;
+						}
+					}).catch(() => {
+						Toast.fail(res.data.msg)
+					})
+					
 					// for (let i = 0; i < 10; i++) {
 					//   this.list.push(this.list.length + 1);
 					// }
 					// 加载状态结束
-					// this.loading = false;
+					this.loading = false;
 
 					// 数据全部加载完成
-					if (this.newlist.length >= 40) {
-						this.finished = true;
-					}
-				}, 500);
+					// if (this.newlist.length >= 40) {
+					// 	this.finished = true;
+					// }
+				}, 2000);
 			},
 			openDetail(eid, aid, id) {
 				this.showDetailToggle = true

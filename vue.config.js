@@ -1,8 +1,9 @@
 const path = require('path');
-const dataLogin = require('./data/doLogin.json');
-const dataCity = require('./data/getESearch.json');
-const dataCityContext = require('./data/context.json');
-const dataGroup = require('./data/groupTree.json')
+const dataLogin = require('./data/doLogin.json');             // 登录校验
+const dataCity = require('./data/getESearch.json');           // 城市新闻列表
+const dataCityContext = require('./data/context.json'); 	  // 城市详情
+const dataGroup = require('./data/groupTree.json');			  // 收信人人员名单
+const dataSource = require('./data/showSourceList.json');	  // 城市筛选来源
 
 module.exports = {
   publicPath: './',
@@ -25,6 +26,9 @@ module.exports = {
 			});
 			app.post('/index.php/City/groupTree', function(req, res) {
 				res.json(dataGroup)
+			});
+			app.post('/index.php/City/showSource', function(req, res) {
+				res.json(dataSource)
 			})
 		}
     },
