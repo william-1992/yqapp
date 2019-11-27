@@ -14,7 +14,7 @@
 		</section>
 		<section>
 			<div class="staff-title">
-				<h3>卫数科技有限公司</h3>
+				<h3>{{ this.$store.state.company_short_name }}</h3>
 				<van-checkbox v-model="checked" @click="onClickCheckbox"></van-checkbox>
 			</div>
 			<van-collapse v-model="activeNames" class="staff-content">
@@ -49,10 +49,10 @@
 				<van-radio name="1" checked-color="#ff6651">短信</van-radio>
 			</van-radio-group>
 		</section>
-		<section class="textarea-wrap">
+		<!-- <section class="textarea-wrap">
 			<van-field v-model="message" type="textarea" placeholder="请输入留言" rows="1" autosize :maxlength="50" clearable />
 			<p>{{this.message.length}} / 50</p>
-		</section>
+		</section> -->
 	</div>
 </template>
 
@@ -63,6 +63,20 @@
 	export default {
 		name: 'push-page-two',
 		props: {
+			fid: {
+				type: String,
+				default: 0
+			},
+			storeType: {
+				type: Boolean,
+				default: false
+			},
+			fidlist: {
+				type: Array,
+				default: function() {
+					return []
+				}
+			},
 			idlist: Array,
 			eventlist: Array
 		},
@@ -101,6 +115,17 @@
 				}
 			},
 			onClickPush() {
+				let arr1 = []
+				let arr2 = []
+				let arr3 = []
+				for(let i=0; i<this.idlist.length; i++) {
+					if(arr1.indexOf(this.idlist[i]) == -1) {
+						arr1.push(this.idlist[i])
+					}
+					if(arr2.indexOf(this.eventlist[i]) == -1) {
+						arr2.push(this.eventlist[i])
+					}
+				}
 				if (this.result.length > 0) {
 					let receiveList = []
 					for (let i = 0; i < this.childlist.length; i++) {
@@ -110,22 +135,48 @@
 							}
 						}
 					}
-					this.$axios({
-						method: 'post',
-						url: '/index.php/City/pushNews',
-						data: {
-							uid: this.$store.state.userid,
-							idlist: this.idlist,
-							event_idlist: this.eventlist,
-							receive_idlist: receiveList,
-							push_styles_idList: this.sendradio,
-							content: this.message
+					if(this.storeType) {
+						for(let i=0; i<this.fidlist.length; i++) {
+							if(arr3.indexOf(this.fidlist[i]) == -1) {
+								arr3.push(this.fidlist[i])
+							}
 						}
-					}).then((res) => {
-						Toast.success(res.data.msg);
-					}).catch((res) => {
-						Toast.fail(res.data.msg);
-					})
+						this.$axios({
+							method: 'post',
+							url: '/index.php/City/pushNews',
+							data: {
+								fid: arr3,
+								uid: this.$store.state.userid,
+								idlist: arr1,
+								event_idlist: arr2,
+								receive_idlist: receiveList,
+								push_styles_idList: this.sendradio,
+								content: this.message
+							}
+						}).then((res) => {
+							Toast.success(res.data.msg);
+						}).catch((res) => {
+							Toast.fail(res.data.msg);
+						})
+					}else {
+						this.$axios({
+							method: 'post',
+							url: '/index.php/City/pushNews',
+							data: {
+								fid: this.fid,
+								uid: this.$store.state.userid,
+								idlist: arr1,
+								event_idlist: arr2,
+								receive_idlist: receiveList,
+								push_styles_idList: this.sendradio,
+								content: this.message
+							}
+						}).then((res) => {
+							Toast.success(res.data.msg);
+						}).catch((res) => {
+							Toast.fail(res.data.msg);
+						})
+					}
 				} else {
 					Toast('未選擇推送人員')
 				}
@@ -141,7 +192,6 @@
 						uid: this.$store.state.userid
 					}
 				}).then((res) => {
-					console.log(res.data.data)
 					this.namelist = res.data.data.groupTree
 					this.childlist = res.data.data.userList
 					let alldata = res.data.data

@@ -1,5 +1,5 @@
 <template>
-	<div class="detail" :style="{ paddingTop: paddingTT + 'px' }">
+	<div class="detail" :style="{ paddingTop: paddingTT + 'px' }" v-if="info.info">
 
 		<header>
 			<h3>新闻详情</h3>
@@ -8,16 +8,37 @@
 
 		<div class="wrapper" ref="wrapper">
 		<section>
-			<h2>在美国的极限施压下，德黑兰的处境更加糟糕自五月份的制裁</h2>
+			<h2>{{ info.info.title.slice(0, 35) + '...' }}</h2>
 			<hgroup>
-				<span>2019-08-05</span>
-				<p>来源:<span>腾讯新闻</span></p>
+				<span>{{ info.info.pubtimeStr }}</span>
+				<p v-if="info.info.site_name">
+					来源:
+					<a :href="info.info.url" target="_blank">{{ info.info.site_name }}</a>
+				</p>
 			</hgroup>
-			<div class="des" :style="{ fontSize: fontValue + 'px' }">在美国的极限施压下，德黑兰的处境更糟糕。自五月份的制裁和军事对峙开始，伊朗的原油出口量大幅度下降，这在一定程度上影响了德黑兰的财政收入来源，通过近期的情况来看，一事实已经成为鲁哈尼的心头之患。而正是因为如此，美国再一次把伊朗逼绝路，甚至是推向战争的边缘！在沙特油田遭遇袭击之后，美国在第一时间把策划者及组织者推卸到伊朗的身上，虽然胡塞武装已经承认，但无事于补。而正是因为如此，美国再一次把伊朗逼上绝路，甚至是推向战争的边缘！在沙特油田遭遇袭击之后，美国在第一时间把策划者及组织推卸到伊朗的身上，虽然胡塞武装已经承认，但无事于补。至是推向战争的边缘在者及组织者推卸到伊朗的身上，虽然胡塞武装已经承认，在美国的极限施压下，德黑兰的处境更糟糕。自五月份的制裁和军事对峙开始，伊朗的原油出口量大幅度下降，这在一定程度上影响了德黑兰的财政收入来源，通过近期的情况来看，一事实已经成为鲁哈尼的心头之患。而正是因为如此，美国再一次把伊朗逼绝路，甚至是推向战争的边缘！</div>
+			<div class="des" :style="{ fontSize: fontValue + 'px' }" v-html="info.cache_text"></div>
 		</section>
 		</div>
 
-		<div class="features">
+		<div class="features" v-if="this.pageType == 'message'">
+			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
+			  <van-tabbar-item @click="onClick(0)"><i class="iconfont">&#xe61b;</i><span>转发</span></van-tabbar-item>
+			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
+			  <van-tabbar-item @click="onClick(2)"><i class="iconfont confrim-btn">&#xe639;</i><span>完成</span></van-tabbar-item>
+			</van-tabbar>
+		</div>
+		<div class="features" v-else-if="this.pageType == 'juststore'">
+			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
+			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
+			</van-tabbar>
+		</div>
+		<div class="features" v-else-if="this.pageType == 'coll'">
+			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
+			  <van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
+			  <van-tabbar-item @click="onClickdodel"><i class="iconfont">&#xe73a;</i><span>取消收藏</span></van-tabbar-item>
+			</van-tabbar>
+		</div>
+		<div class="features" v-else>
 			<van-tabbar v-model="active" active-color='#4e5a78'>
 			  <van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
 			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
@@ -37,9 +58,47 @@
 
 		<div class="de-push">
 			<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
-				<push-to @closeThis="closePush" :idlist="[...detailid]" :eventlist="[...eventid]"></push-to>
+				<push-to 
+					@closeThis="closePush" 
+					:idlist="[...detailid]" 
+					:eventlist="[...eventid]" 
+					:linktoggle="'true'"
+					:linkurl="info.info.url"
+					:fid="fid"
+				></push-to>
 			</van-popup>
 		</div>
+
+		<!-- 预警推送 -->
+		<van-popup 
+			v-model="pushpageToggle" 
+			:overlay="false"
+			closeable 
+			close-icon-position="top-left" 
+			position="right" 
+			:style="{ height: '100%', width: '100%' }"
+		>
+			<lazy-component>
+				<push-page :idlist="[detailid]" :eventlist="[eventid]" :pushid="detailid" :fid="fid"></push-page>
+			</lazy-component>
+		</van-popup>
+
+		<!-- 完成弹框 -->
+		<van-dialog
+			v-model="finishToggle"
+			title="添加留言"
+			show-cancel-button
+			@confirm="onClickConfirm"
+		>
+			<van-field
+				v-model="message"
+				rows="3"
+				autosize
+				type="textarea"
+				placeholder="请输入留言"
+				show-word-limit
+			></van-field>
+		</van-dialog>
 
 	</div>
 </template>
@@ -48,50 +107,143 @@
 import { mapState } from 'vuex';
 import { Dialog, Toast } from 'vant';
 import PushTo from '@c/common/PushTo';
+import PushPage from '@c/common/PushPage';
 export default {
 	name: 'detail',
 	components: {
-		PushTo
+		PushTo,
+		PushPage
 	},
 	props: {
-		detailid: String,
-		eventid: String,
-		deletebtn: Boolean
+		fid: {
+			type: String,
+			default: ''
+		},
+		detailid: {
+			type: String,
+			default: ''
+		},
+		eventid: {
+			type: String,
+			default: ''
+		},
+		deletebtn: {
+			type: Boolean,
+			default: true
+		},
+		pageType: {
+			type: String,
+			default: 'monitor'
+		}
 	},
 	data() {
 		return {
+			message: '',
+			finishToggle: false,
+			pushpageToggle: false,
+			mesactive: 0,
 			active: 0,
 			fontValue: 18,
 			fontToggle: false,
 			pushToggle: false,
-			timer: null
+			timer: null,
+			info: ''
 		}
 	},
 	computed: {
-		...mapState(['paddingTT'])
+		...mapState(['paddingTT', 'monitorEventList'])
 	},
 	mounted() {
-		this.getDetailData()
-		// this.scroll = new Bscroll(this.$refs.wrapper, {mouseWheel: true, click: true, tag: true})
 		this.timer = setInterval(() => {
 			if(this.fontToggle) {
 				this.fontToggle = false
 			}
 		}, 20000)
+		this.$nextTick(() => {
+			setTimeout(() => {
+				this.getDetailData()
+			}, 500)
+		})
 	},
 	methods: {
-		getDetailData() {
-			this.$axios({
-				method: 'post',
-				url: '/index.php/City/webcache',
-				data: {
-					uid: this.$store.state.userid
-				}
-			}).then((res) => {
-				
-			}).catch((res) => {
-				Toast.fail(res.msg)
+		onClickdodel() {
+			Dialog.confirm({
+				message: '确定取消收藏该条信息？'
+			}).then(()=> {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Favo/doDel',
+					data: {
+						uid: this.$store.state.userid,
+						main_id: this.eventid
+					}
+				}).then((res) => {
+					Toast.success(res.data.msg)
+					setTimeout(function() {
+						this.$emit('backHandle', this.eventid)
+					}, 600)
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
 			})
+		},
+		onClickConfirm() {
+			if(this.message.length === 0) {
+				Toast('请输入留言信息！')
+			}else {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Push/finish',
+					data: {
+						fid: this.fidd,
+						uid: this.$store.state.userid,
+						event_push_id: this.detailid,
+						remark: this.message
+					}
+				}).then((res) => {
+					Toast.success(res.data.msg)
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
+			}
+		},
+		onClick(type) {
+			if(type == 0) {
+				this.pushpageToggle = true
+			}else {
+				this.finishToggle = true
+			}
+		},
+		getDetailData() {
+			if(this.fid == '') {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/webcache',
+					data: {
+						uid: this.$store.state.userid,
+						event_id: this.eventid
+					}
+				}).then((res) => {
+					this.info = res.data.data
+				}).catch((res) => {
+					Toast.fail(res.msg)
+				})
+			}else {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Monitor/webcache',
+					data: {
+						uid: this.$store.state.userid,
+						fid: this.fid,
+						mainid: this.eventid
+					}
+				}).then((res) => {
+					this.info = res.data.data
+				}).catch((res) => {
+					Toast.fail(res.msg)
+				})
+			}
+			
 		},
 		closePush() {
 			this.pushToggle = false
@@ -100,18 +252,47 @@ export default {
 			if(value === 0) {
 				this.pushToggle = true
 			}else if(value === 1) {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/favorite',
-					data: {
-						uid: this.$store.state.userid,
-						main_id: this.detailid,
-						event_id: this.eventid
-					}
-				}).then((res) => {
-					Toast.success(res.data.msg)
-				}).then((res) => {
-					Toast.fill(res.data.msg)
+				Dialog.confirm({
+					message: '收藏此条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/favorite',
+						data: {
+							fid: this.fid,
+							uid: this.$store.state.userid,
+							main_id: this.detailid,
+							event_id: this.eventid
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+					}).then((res) => {
+						Toast.fill(res.data.msg)
+					})
+				})
+			}else {
+				Dialog.confirm({
+					message: '确定删除该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Monitor/eventBatchDelete',
+						data: {
+							fid: this.fid,
+							uid: this.$store.state.userid,
+							event_idlist: [this.eventid]
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+						this.$emit('backHandle', false)
+						for(let i=0; i<this.monitorEventList.length; i++) {
+							if(this.monitorEventList[i].id == this.detailid) {
+								this.monitorEventList.splice(i, 1)
+							}
+						}
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
 				})
 			}
 		},
@@ -159,16 +340,18 @@ export default {
 			line-height: px2rem(26);
 		}
 		hgroup {
-			margin-top: px2rem(20);
+			margin-top: px2rem(10);
 			display: flex;
 			justify-content: space-between;
 			span {
 				font-size: px2rem(14);
 				color: #4e5a78;
+				margin-bottom: px2rem(10);
 			}
 			p {
 				font-size: px2rem(14);
 				color: #4e5a78;
+				margin-bottom: px2rem(10);
 				span {
 					margin-left: px2rem(5);
 					color: #5984d1;
@@ -176,7 +359,6 @@ export default {
 			}
 		}
 		div.des {
-			margin-top: px2rem(20);
 			font-size: px2rem(18);
 			line-height: px2rem(30);
 			text-indent: px2rem(18);
@@ -190,6 +372,9 @@ export default {
 			text-align: center;
 			i {
 				font-size: px2rem(24)
+			}
+			.confrim-btn {
+				font-size: px2rem(20)
 			}
 		}
 	}

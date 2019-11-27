@@ -1,0 +1,28 @@
+{
+"status": 1,
+"msg": "",
+"data": {
+  "groupTree": [],
+  "userList": [
+    {
+      "id": "1",
+      "pid": "93",
+      "username": "dj",
+      "nickname": "邓进edit"
+    },
+    {
+      "id": "2",
+      "pid": "93",
+      "username": "deng1",
+      "nickname": "邓一"
+    },
+    {
+      "id": "4",
+      "pid": "93",
+      "username": "deng3cai",
+      "nickname": "邓三cai"
+    }
+  ]
+},
+"code": 0
+}

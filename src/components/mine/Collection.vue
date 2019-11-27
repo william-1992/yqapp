@@ -61,6 +61,7 @@
 
 <script>
 import { mapState } from 'vuex';
+import { Toast } from 'vant';
 import CollList from './List';
 export default {
 	name: 'collection',
@@ -73,13 +74,17 @@ export default {
 			value: '',
 			value1: 0,
       option1: [
-        { text: '标题', value: 0 },
-        { text: '内容', value: 1 }
+        { text: '标题', value: 0 }
       ]
 		}
 	},
 	computed: {
 		...mapState(['checkboxToggleColl'])
+	},
+	watch: {
+		value(val) {
+			this.$store.state.collQuery.keyword = val
+		}
 	},
 	methods: {
 		onClickLeft() {
@@ -93,7 +98,17 @@ export default {
 			this.show = false
 		},
 		onSearch() {
-
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Favo/getList',
+				data: this.$store.state.collQuery
+			}).then((res) => {
+				this.$store.commit('handleCollList', res.data.data)
+				Toast.success(res.data.msg)
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
+			this.show = false
 		},
 		onSetup(type) {
 			if(type == '1') {

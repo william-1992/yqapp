@@ -71,3 +71,4 @@ input {
 .vc-switch {
 	bottom: 100px !important;
 }
+.van-dialog .van-dialog__message{ font-size: 16px }

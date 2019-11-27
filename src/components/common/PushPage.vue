@@ -1,7 +1,7 @@
 <template>
 	<div class="push-page">
 		<header>
-			<van-button type="primary" size="small">推送</van-button>
+			<van-button type="primary" size="small" @click="onPush">推送</van-button>
 		</header>
 		<section class="seleted-name">
 			<p v-if="result.length == 0">收件人选择</p>
@@ -14,31 +14,29 @@
 		</section>
 		<section>
 			<div class="staff-title">
-				<h3>卫数科技有限公司</h3>
+				<h3>{{ this.$store.state.company_name }}</h3>
 			</div>
 			<van-collapse v-model="activeNames" class="staff-content">
 			  <van-collapse-item title="标题1" name="1">
 			  	<div slot="title" class="inner">
 			  		<p>
 			  			<van-icon name="play" color="#d3dbeb" />
-			  			<span>技术部</span>
+			  			<span>{{ this.$store.state.company_short_name }}</span>
 			  		</p>
-			  		<time>{{ namelist.length }}</time>
+			  		<!-- <time>{{ namelist.length }}</time> -->
 			  	</div>
 			  	<van-checkbox-group v-model="result" checked-color="#ff6651">
-					  <van-checkbox v-for="(item, index) in namelist" :key="item.id" :name="item.name">
+					  <van-checkbox v-for="(item, index) in namelist" :key="item.id" :name="item.nickname">
 					  	<div class="item-wrap">
-					  		<div class="item-wrap-circle">{{item.name.slice(0, 1)}}</div>
+					  		<div class="item-wrap-circle">{{item.nickname.slice(0, 1)}}</div>
 					  		<div class="item-wrap-des">
-					  			<h3>{{item.name}}</h3>
-					  			<p>{{item.office}}</p>
+					  			<h3>{{item.nickname}}</h3>
+					  			<p v-if="item.position">{{item.position}}</p>
 					  		</div>
 					  	</div>
 						</van-checkbox>
 					</van-checkbox-group>
 				</van-collapse-item>
-			  <!-- <van-collapse-item title="标题2" name="2">内容</van-collapse-item>
-			  <van-collapse-item title="标题3" name="3">内容</van-collapse-item> -->
 			</van-collapse>
 		</section>
 		<section class="textarea-wrap">
@@ -57,43 +55,136 @@
 </template>
 
 <script>
+import { Toast } from 'vant';
 export default {
 	name: 'push-page',
 	props: {
 		idlist: Array,
-		eventlist: Array
+		eventlist: Array,
+		pushid: {
+			type: String,
+			default: ''
+		},
+		fid: {
+			type: String,
+			default: ''
+		},
+		storeType: {
+			type: Boolean,
+			default: false
+		},
+		fidlist: {
+			type: Array,
+			default: function() {
+				return []
+			}
+		}
 	},
 	data() {
 		return {
 			sendradio: '1',
 			checked: false,
 			message: '',
-			activeNames: [],
+			activeNames: ['1'],
 			result: [],
-			namelist: [
-				{id: 1, name: '阿大', office: '总管'},
-				{id: 2, name: '阿二', office: '经理'},
-				{id: 3, name: '阿三', office: '主管'}
-			]
-		}
-	},
-	methods: {
-		onClickDelete(index) {
-			this.result.splice(index, 1)
+			namelist: []
 		}
 	},
 	mounted() {
-		console.log('1')
+		this.getUser()
 	},
-	activated() {
-		console.log('1')
-
-		this.result = []
-	},
-	destroyed() {
-		console.log('1')
-
-		this.result = []
+	methods: {
+		onPush() {
+			if(this.result.length === 0) {
+				Toast.fail('请选择推送人')
+				return false
+			}else {
+				let arr = []
+				let arr2 = []
+				let arr3 = []
+				for(let i=0; i<this.namelist.length; i++) {
+					for(let j=0; j<this.result.length; j++) {
+						if(this.result[j] == this.namelist[i].nickname ) {
+							arr.push(this.namelist[i].id)
+						}
+					}
+				}
+				for(let i=0; i<this.fidlist.length; i++) {
+					if(arr2.indexOf(this.fidlist[i]) == -1) {
+						arr2.push(this.fidlist[i])
+					}
+				}
+				if(this.storeType) {
+					for(let i=0; i<this.eventlist.length; i++) {
+						if(arr3.indexOf(this.eventlist[i]) == -1) {
+							arr3.push(this.eventlist[i])
+						}
+					}
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Push/pushtoSubUser',
+						data: {
+							fid: arr2,
+							main_id: arr3,
+							sub_userlist: arr,
+							remark: this.message
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}else {
+					if(this.pushid !== '') {
+						this.$axios({
+							method: 'post',
+							url: '/index.php/Push/forward',
+							data: {
+								uid: this.$store.state.userid,
+								event_push_id: this.pushid,
+								sub_userlist: arr,
+								remark: this.message
+							}
+						}).then((res) => {
+							Toast.success(res.data.msg)
+						}).catch((res) => {
+							Toast.fail(res.data.msg)
+						})
+					}else {
+						this.$axios({
+							method: 'post',
+							url: '/index.php/Push/pushtoSubUser',
+							data: {
+								fid: this.fid,
+								main_id: this.eventlist,
+								sub_userlist: arr,
+								remark: this.message
+							}
+						}).then((res) => {
+							Toast.success(res.data.msg)
+						}).catch((res) => {
+							Toast.fail(res.data.msg)
+						})
+					}
+				}
+			}
+		},
+		getUser() {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/User/getSubUserTree',
+				data: {
+					uid: this.$store.state.userid
+				}
+			}).then((res) => {
+				this.namelist = res.data.data.userList
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
+		},
+		onClickDelete(index) {
+			this.result.splice(index, 1)
+		}
 	}
 }
 </script>
@@ -160,7 +251,7 @@ export default {
 				background-color: $bgColor;
 			}
 			/deep/.van-icon-arrow {
-				display: none;
+				display: block;
 			}
 			/deep/.van-checkbox {
 				justify-content: space-between;
@@ -180,6 +271,8 @@ export default {
 						font-size: px2rem(16);
 					}
 					.item-wrap-des {
+						display: flex;
+						align-items: center;
 						h3 {
 							font-size: px2rem(14)
 						}

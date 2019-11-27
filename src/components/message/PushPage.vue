@@ -1,36 +1,47 @@
 <template>
 	<div class="push-page">
-		<van-tabs v-model="activeName" :line-width="16" title-active-color="#323948" title-inactive-color="#acb7cf" :border="false">
-		  <van-tab title="待办事项" name="a"></van-tab>
-		  <van-tab title="我发起的" name="b"></van-tab>
-		  <van-tab title="我转发的" name="c"></van-tab>
+		<van-tabs 
+			v-model="activeName" 
+			:line-width="16" 
+			title-active-color="#323948" 
+			title-inactive-color="#acb7cf" 
+			:border="false"
+			:swipeable="true"
+			animated
+		>
+		  <van-tab title="待办事项" name="a">
+			<todo-list v-if="this.pushType == 'a'"></todo-list>
+		  </van-tab>
+		  <van-tab title="我发起的" name="b">
+			<push-list v-if="this.pushType == 'b'"></push-list>
+		  </van-tab>
+		  <van-tab title="我转发的" name="c">
+			<forward-list v-if="this.pushType == 'c'"></forward-list>
+		  </van-tab>
 		</van-tabs>
-		<push-list :pushType="pushType"></push-list>
 	</div>
 </template>
 
 <script>
-import PushList from '@c/message/List';
+import TodoList from '@c/message/TodoList';
+import PushList from '@c/message/PushList';
+import ForwardList from '@c/message/ForwardList';
 export default {
 	name: 'push-page',
 	components: {
-		PushList
+		TodoList,
+		PushList,
+		ForwardList
 	},
 	data() {
 		return {
 			activeName: 'a',
-			pushType: 'upcoming'
+			pushType: 'a'
 		}
 	},
 	watch: {
 		activeName(val) {
-			if(val === 'a') {
-				this.pushType = 'upcoming'
-			}else if(val === 'b') {
-				this.pushType = 'launch'
-			}else if(val === 'c') {
-				this.pushType = 'forward'
-			}
+			this.pushType = val
 		}
 	}
 }

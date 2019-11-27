@@ -1,10 +1,10 @@
 <template>
   <div class="home">
 
-    <login v-if="loginToggle"></login>
+    <!-- <login v-if="loginToggle"></login> -->
 
-    <div v-else>
-    	<keep-alive :max="5">
+    <div>
+    	<keep-alive>
     		<component :is="isComponent"></component>
     	</keep-alive>
 
@@ -45,7 +45,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle'])
+    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle', 'token'])
   },
   mounted() {
 

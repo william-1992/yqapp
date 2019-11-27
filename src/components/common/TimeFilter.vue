@@ -15,15 +15,15 @@
 		</div>
 		<h5>观点</h5>
 		<ul>
-			<li v-for="item in viewlist" :key="item.id" :class="item.class">{{item.title}}</li>
+			<li v-for="(item, index) in viewlist" :key="item.id" :class="item.class" @click="onClickView(index)">{{item.title}}</li>
 		</ul>
 		<h5>来源</h5>
 		<ul>
-			<li v-for="item in sourcelist" :key="item.id" :class="item.class">{{item.title}}</li>
+			<li v-for="(item, index) in sourcelist" :key="item.id" :class="item.class" @click="onClickSource(item.id, index)">{{item.title}}</li>
 		</ul>
 		<div class="btn-wrap">
 			<van-button type="warning" color="#6f7ea0">重置</van-button>
-			<van-button type="danger" color="#ff6651">保存</van-button>
+			<van-button type="danger" color="#ff6651" @click="onClickSure">保存</van-button>
 		</div>
 
 		<div class="datePicker" v-if="showDate">
@@ -41,11 +41,19 @@
 </template>
 
 <script>
+	import { mapState } from 'vuex';
 	import {
 		Toast
 	} from 'vant';
 	export default {
 		name: 'time-filter',
+		props: {
+			pageType: String,
+			sorttype: {
+				type: String,
+				default: ""
+			}
+		},
 		data() {
 			return {
 				showDate: false,
@@ -70,26 +78,151 @@
 				time: '',
 				s_time: '开始时间',
 				e_time: '结束时间',
-				es_source: ''
+				es_source: '1',
+				point: '',
+				source: ''
 			}
 		},
 		mounted() {
 			this.showSourceList()
 		},
 		computed: {
-			newSource() {
-				return this.sourcelist[0].class = 'active'
-			}
+			...mapState(['monitorQuery', 'cityQuery'])
 		},
 		watch: {
+			es_source(val) {
+				if(val == '1') {
+					this.dataTitle = '开始时间'
+				}else {
+					this.dataTitle = '结束时间'
+				}
+			},
+			source(val) {
+				if(this.pageType == 'centerpage') {
+					this.monitorQuery.source = val
+				}else {
+					this.cityQuery.source = val
+				}
+			},
+			point(val) {
+				if(this.pageType == 'centerpage') {
+					this.monitorQuery.point = val
+				}else {
+					this.cityQuery.point = val
+				}
+			},
+			e_time(val) {
+				console.log('123')
+				if(this.pageType == 'centerpage') {
+					this.monitorQuery.e_time = val
+				}else {
+					this.cityQuery.e_time = val
+				}
+			},
+			s_time(val) {
+				if(this.pageType == 'centerpage') {
+					this.$store.state.monitorQuery.s_time = val
+				}else {
+					this.$store.state.cityQuery.s_time = val
+				}
+			},
+			time(val) {
+				if(this.pageType == 'centerpage') {
+					this.monitorQuery.time = val
+				}else {
+					this.cityQuery.time = val
+				}
+				if(val !== 'custom') {
+					this.$store.state.monitorQuery.s_time = ''
+					this.$store.state.cityQuery.s_time = ''
+					this.$store.state.monitorQuery.e_time = ''
+					this.$store.state.cityQuery.e_time = ''
+				}
+			},
 			zdytoggle(val) {
 				if(val) {
-					this.s_time = ''
-					this.e_time = ''
+					// this.s_time = ''
+					// this.e_time = ''
 				}
 			}
 		},
 		methods: {
+			onClickSure() {
+				if(this.pageType == 'citypage') {
+					let startTime = ''
+					let endTime = ''
+					this.s_time == '开始时间' ? startTime = '' : startTime = this.s_time
+					this.e_time == '结束时间' ? endTime = '' : endTime = this.e_time
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/getESearch',
+						data: this.cityQuery
+					}).then((res) => {
+						let list = res.data.data.eventList
+						if(list.length > 0) {
+							list.forEach((item) => {
+								item.wordStr = item.wordStr.split('+')
+							})
+							this.$store.commit('handleCityList', list)
+						}else {
+							this.$store.commit('handleCityList', [])
+						}
+						this.$emit('closePopup', false)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}else {
+					let startTime = ''
+					let endTime = ''
+					this.s_time == '开始时间' ? startTime = '' : startTime = this.s_time
+					this.e_time == '结束时间' ? endTime = '' : endTime = this.e_time
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Monitor/getESearch',
+						data: this.monitorQuery
+					}).then((res) => {
+						let list = res.data.data.eventList
+						if(list.length > 0) {
+							list.forEach((item, index) => {
+								item.wordStr = item.wordStr.split('+')
+							})
+							this.$store.commit('handleMonitorList', list)
+						}else {
+							this.$store.commit('handleMonitorList', [])
+						}
+						this.$emit('closePopup', false)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}
+			},
+			onClickSource(id, index) {
+				this.sourcelist.forEach((item, index) => {
+					item.class = ''
+				})
+				this.sourcelist[index].class = "active"
+				this.source = id
+			},
+			onClickView(index) {
+				this.viewlist.forEach((item, index) => {
+					item.class = ''
+				})
+				this.viewlist[index].class = 'active'
+				switch(index) {
+					case 0:
+						this.point = '';
+						break;
+					case 1:
+						this.point = 'p';
+						break;
+					case 2:
+						this.point = 'm';
+						break;
+					default:
+						this.point = 'n';
+						break;
+				}
+			},
 			onClickDate(index) {
 				if(index === 0) {
 					this.time = ''
@@ -108,19 +241,48 @@
 				this.timelist[index].class = 'active'
 			},
 			showSourceList() {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/showSource',
-					data: {
-						uid: this.$store.state.userid
-					}
-				}).then((res) => {
-					res.data.data.forEach((item, index) => {
-						this.sourcelist.push(Object.assign({}, item, {'class':''}))
+				if(this.pageType == 'centerpage') {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Monitor/showSourceList',
+						data: {
+							uid: this.$store.state.uid,
+							fid: this.$store.state.fid
+						}
+					}).then((res) => {
+						res.data.data.forEach((item, index) => {
+							this.sourcelist.push(Object.assign({}, item, {'class':''}))
+						})
+						let obj = {
+							id: '',
+							title: '全部',
+							class: 'active'
+						}
+						this.sourcelist.unshift(obj)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
 					})
-				}).catch((res) => {
-					Toast.fail(res.data.msg)
-				})
+				}else {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/showSource',
+						data: {
+							uid: this.$store.state.userid
+						}
+					}).then((res) => {
+						res.data.data.forEach((item, index) => {
+							this.sourcelist.push(Object.assign({}, item, {'class':''}))
+						})
+						let obj = {
+							id: '',
+							title: '全部',
+							class: 'active'
+						}
+						this.sourcelist.unshift(obj)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}
 			},
 			onClickTime() {
 				this.zdytoggle = false
@@ -132,8 +294,15 @@
 				// this.showDate = true
 			},
 			onConfirm(value) {
+				let year = value.getFullYear() + ''
+				let month = value.getMonth() + 1 + ''
+				let date = value.getDate() + ''
+				month.length == 1 ? month = '0' + month : month = month
+				date.length == 1 ? date = '0' + date : date = date
+
+				
 				this.showDate = false
-				let str = value.getFullYear() +'-'+ Number(value.getMonth()+1) +'-'+ value.getDate()
+				let str = year +'-'+ month +'-'+ date
 				this.es_source == 1 ? this.s_time = str : this.e_time = str
 			},
 			onCancel() {

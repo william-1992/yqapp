@@ -37,6 +37,7 @@
 		<van-popup
 			v-model="reportToggle"
 			closeable
+			:overlay="false"
 			close-icon="arrow-left"
 			close-icon-position="top-left"
 			position="right"

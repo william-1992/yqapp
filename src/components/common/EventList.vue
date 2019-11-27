@@ -13,8 +13,12 @@
 export default {
 	name: 'event-list',
 	props: {
+		fid: {
+			type: String,
+			default: ''
+		},
 		eid: String,
-		aid: Number
+		aid: [ String, Number ]
 	},
 	data() {
 		return {
@@ -29,6 +33,23 @@ export default {
 	},
 	watch: {
 		eid(val) {
+			if(this.fid == '') {
+				this.getCity()
+			}else {
+				this.getCenter()
+			}
+		}
+	},
+	mounted() {
+		if(this.fid == '') {
+			this.getCity()
+		}else {
+			this.getCenter()
+		}
+			
+	},
+	methods: {
+		getCity() {
 			this.$axios({
 				method: 'post',
 				url: '/index.php/City/context',
@@ -38,27 +59,27 @@ export default {
 					areaid: this.aid
 				}
 			}).then((res) => {
-				console.log(res.data)
+				this.eventList = res.data.data.list
 			}).catch((res) => {
-				
+				Toast.fail(res.data.msg)
+			})
+		},
+		getCenter() {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Monitor/context',
+				data: {
+					uid: this.$store.state.userid,
+					fid: this.fid,
+					event_id: this.eid,
+					areaid: this.aid
+				}
+			}).then((res) => {
+				this.eventList = res.data.data.list
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
 			})
 		}
-	},
-	mounted() {
-		this.$axios({
-			method: 'post',
-			url: '/index.php/City/context',
-			data: {
-				uid: this.$store.state.userid,
-				event_id: this.eid,
-				areaid: this.aid
-			}
-		}).then((res) => {
-			this.eventList = res.data.data.list
-			console.log(res.data)
-		}).catch((res) => {
-			
-		})	
 	}
 }
 </script>

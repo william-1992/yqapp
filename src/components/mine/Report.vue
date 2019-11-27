@@ -1,14 +1,11 @@
 <template>
 	<div class="report">
-			<van-nav-bar
-				:title="mestTitle"
-				:border="false"
-			></van-nav-bar>
+			<h2>我的报告</h2>
 			<ul>
-				<li v-for="item in list" :key="item.id" @click="onClickItem(item.name)">
+				<li v-for="item in list" :key="item.id" @click="onClickItem(item.title, item.id)">
 					<div>
-						<span>{{ item.name.slice(-1) }}</span>
-						<strong>{{ item.name }}</strong>
+						<span>{{ item.title.slice(0, 1) }}</span>
+						<strong>{{ item.title }}</strong>
 					</div>
 					<van-icon name="arrow" />
 				</li>
@@ -17,6 +14,7 @@
 			<van-popup
 				v-model="itemToggle"
 				position="right"
+				:overlay="false"
 				closeable
 				close-icon="arrow-left"
 				close-icon-position="top-left"
@@ -25,12 +23,25 @@
 				<div class="item-wrap">
 					<h4>{{ mestTitle }}</h4>
 					<ul class="item-wrap">
-						<li v-for="item in detailList" :key="item.id" @click="onClickDetail(item.id)">
-							<div><strong>{{ item.value }}</strong></div>
+						<li v-for="item in detailList" :key="item.id" @click="onClickDetail(item.token)">
+							<div><strong>{{ item.title }}</strong></div>
 							<i class="iconfont" @click="onClickDelete($event, item.id)">&#xe64c;</i>
 						</li>
 					</ul>
 				</div>				
+			</van-popup>
+
+			<!-- 详情页 -->
+			<van-popup
+				v-model="detailToggle"
+				position="right"
+				:overlay="false"
+				closeable
+				close-icon="arrow-left"
+				close-icon-position="top-left"
+				:style="{ width: '100%', height: '100%' }"
+			>
+				<doc-detail :detailtk="detailTk"></doc-detail>
 			</van-popup>
 
 
@@ -38,41 +49,36 @@
 </template>
 
 <script>
-import { Dialog } from 'vant';
+import { Dialog, Toast } from 'vant';
+import DocDetail from './DocDetail';
 export default {
 	name: 'report',
+	components: {
+		DocDetail
+	},
 	data() {
 		return {
 			itemToggle: false,
+			detailToggle: false,
 			mestTitle: '我的报告',
 			itemType: 'A',
-			list: [{
-				id: '1',
-				name: '方案一'
-			}, {
-				id: '2',
-				name: '方案二'
-			}, {
-				id: '3',
-				name: '方案三'
-			}, {
-				id: '4',
-				name: '方案四'
-			}, {
-				id: '5',
-				name: '方案五'
-			}],
-			detailList: [{
-				id: 1,
-				value: '2019-09-28 日报'
-			}, {
-				id: 2,
-				value: '2019-09-29 日报'
-			}, {
-				id: 3,
-				value: '2019-09-30 日报'
-			}]
+			list: [],
+			detailList: [],
+			detailTk: ''
 		}
+	},
+	mounted() {
+		this.$axios({
+			method: 'post',
+			url: '/index.php/Monitor/getPlanList',
+			data: {
+				uid: this.$store.state.userid
+			}
+		}).then((res) => {
+			this.list = res.data.data
+		}).catch((res) => {
+			Toast.fail(res.data.msg)
+		})
 	},
 	methods: {
 		onClickLeft() {
@@ -83,20 +89,42 @@ export default {
 				this.itemType = 'A'
 			}
 		},
-		onClickItem(name) {
+		onClickItem(name, id) {
 			this.mestTitle = name
-			// this.itemType = ''
 			this.itemToggle = true
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Report/getDocList',
+				data: {
+					uid: this.$store.state.userid,
+					fid: id,
+					type: 'day'
+				}
+			}).then((res) => {
+				this.detailList = res.data.data
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
 		},
-		onClickDetail(id) {
-			console.log('进入详情页' + id)
+		onClickDetail(tk) {
+			this.detailTk = tk
+			this.detailToggle = true
 		},
 		onClickDelete(e, id) {
-			console.log(id)
 			Dialog.confirm({
 				message: '确认删除？'
 			}).then(() => {
-				console.log('确认')
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Report/deleteDoc',
+					data: {
+						id: id
+					}
+				}).then((res) => {
+					Toast.success(res.data.msg)
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
 			}).catch(() => {
 				console.log('取消')
 			})
@@ -109,6 +137,12 @@ export default {
 <style lang="scss" scoped>
 @import '@css/constants.scss';
 .report {
+	h2 {
+		font-size: px2rem(17);
+		color: #323948;
+		line-height: px2rem(50);
+		text-align: center;
+	}
 	ul li{
 		display: flex;
 		justify-content: space-between;
@@ -138,8 +172,8 @@ export default {
 	}
 	.item-wrap {
 		h4 {
-			font-size: px2rem(18);
-			line-height: px2rem(44);
+			font-size: px2rem(17);
+			line-height: px2rem(50);
 			text-align: center;
 		}
 		ul {

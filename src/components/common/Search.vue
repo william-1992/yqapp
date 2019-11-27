@@ -62,6 +62,9 @@ import { mapState } from 'vuex';
 import Popup from '@c/common/Popup';
 export default {
 	name: 'search',
+	props: {
+		pageType: String
+	},
 	components: {
 		Popup
 	},
@@ -70,10 +73,10 @@ export default {
 			show: false,
 			popupToggle: true,
 			value: '',
-			value1: 0,
+			value1: 1,
       option1: [
-        { text: '标题', value: 0 },
-        { text: '内容', value: 1 }
+        { text: '标题', value: 1 },
+        { text: '内容', value: 2 }
       ]
 		}
 	},
@@ -82,8 +85,30 @@ export default {
 			name: state => state.home_tabs_name,
 			checkboxToggleCenter: state => state.checkboxToggleCenter,
 			checkboxToggleCity: state => state.checkboxToggleCity,
-			paddingTT: state => state.paddingTT
+			paddingTT: state => state.paddingTT,
+			monitorQuery: state => state.monitorQuery,
+			cityQuery: state => state.cityQuery
 		})
+	},
+	watch: {
+		value1(val) {
+			if(this.pageType == 'monitor') {
+				this.$store.state.monitorQuery.es_type = val
+			}else if(this.pageType == 'city') {
+				this.$store.state.cityQuery.es_type = val
+			}else {
+
+			}
+		},
+		value(val) {
+			if(this.pageType == 'monitor') {
+				this.$store.state.monitorQuery.keyword = val
+			}else if(this.pageType == 'city') {
+				this.$store.state.cityQuery.es_type = val
+			}else {
+
+			}
+		}
 	},
 	methods: {
 		onClickPopup() {
@@ -106,7 +131,32 @@ export default {
 			}
 		},
 		onSearch() {
-
+			if(this.pageType == 'monitor') {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Monitor/getESearch',
+					data: this.monitorQuery
+				}).then((res) => {
+					let list = res.data.data.eventList
+					list.forEach((item, index) => {
+						item.wordStr = item.wordStr.split('+')
+					})
+					this.$store.commit('handleMonitorList', list)
+					this.show = false
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
+			}else if(this.pageType == 'city') {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/getESearch',
+					data: this.cityQuery
+				}).then((res) => {
+					this.$store.commit('handleCityList', res.data.data.eventList)
+				}).catch(() => {
+					Toast.fail(res.data.msg)
+				})
+			}
 		},
 		onClickBack() {
 			this.show = false

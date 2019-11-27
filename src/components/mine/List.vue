@@ -1,9 +1,16 @@
 <template>
 	<div class="list">
 
-		<van-list v-model="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
+		<van-list 
+			v-model="loading" 
+			:finished="finished" 
+			:error.sync="errored" 
+			error-text="请求失败，点击重新加载" 
+			finished-text="没有更多了" 
+			@load="onLoad"
+		>
 
-			<van-swipe-cell v-for="item in newlist" :key="item.id">
+			<van-swipe-cell v-for="item in collEventList" :key="item.id">
 
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
@@ -11,47 +18,50 @@
 						<div class="left">
 							<van-checkbox v-show="checkboxToggleColl" v-model="item.checked" :key="item.id" :name="item.id" checked-color="#ff6651"
 							 @click.stop="onClickRadio(item.id)"></van-checkbox>
-							<div class="rect">{{ item.type }}</div>
-							<div class="frie" @click.stop="onLinkEvent(item.id)">{{ item.number }}</div>
-							<h2>食品安全</h2>
+							<div class="rect zheng" v-if="item.point == '1'">正</div>
+							<div class="rect fu" v-else-if="item.point == '2'">负</div>
+							<div class="rect zhong" v-else>中</div>
+							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.id, item.fid || 0)">{{ item.docount }}</div>
 						</div>
 						<div class="right">
-							{{item.timer}}小时前更新
+							{{item.preTimeStr}}前更新
 						</div>
 					</div>
 					<div class="timer">
 						<div class="timer-left">
-							<i class="iconfont">&#xe623;</i>
-							<span v-if="item.source == 1">博客</span>
-							<span v-else-if="item.source == 2">微信</span>
-							<span v-else>头条</span>
+							<!-- <i class="iconfont">&#xe623;</i> -->
+							<img v-if="item.site_icon_type == 9" src="../../assets/images/newicon04.png" />
+							<img v-else-if="item.site_icon_type == 20" src="../../assets/images/newicon09.png" />
+							<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon07.png" />
+							<img v-else-if="item.site_icon_type == 4" src="../../assets/images/newicon01.png" />
+							<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
+							<img v-else src="../../assets/images/newicon11.png" />
+
+							<span>{{ item.site_name }}</span>
 						</div>
 						<div class="timer-right">
-							首次收录： {{item.firstTime}}
+							首次收录： {{item.addtimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.id)">
-						<p>{{item.des}}</p>
+					<div class="desc" @click="openDetail(item.event_id, item.id, item.fid || 0)">
+						<p>{{item.light | textLength}}</p>
 					</div>
 					<div class="tags">
 						<h5>监控词组：</h5>
 						<p>
-							<span v-for="(val, index) in item.tags" :key="index">{{val.title}}</span>
+							<span v-for="(val, index) in item.ewords" :key="index">{{ val }}</span>
 						</p>
 					</div>
 				</div>
 				<!-- </van-cell> -->
 				<template slot="right">
-					<van-button type="default">
-						<i class="iconfont">&#xe623;</i><span>推送</span>
+					<van-button type="default"  @click="onClickOnePush(item.id, item.event_id, item.fid || 0, item.url)">
+						<i class="iconfont">&#xe623;</i>
+						<span>推送</span>
 					</van-button>
-					<van-button type="default">
+					<van-button type="default" @click="onClickOneStore(item.event_id)">
 						<i class="iconfont">&#xe6e7;</i>
-						<span>收藏</span>
-					</van-button>
-					<van-button type="default">
-						<i class="iconfont">&#xe6e9;</i>
-						<span>删除</span>
+						<span>取消收藏</span>
 					</van-button>
 				</template>
 			</van-swipe-cell>
@@ -66,184 +76,174 @@
 			</div>
 		</div>
 
-		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
-		 :overlay="false" :get-container="collection" :style="{ height: '100%', width: '100%' }">
-			<detail></detail>
+		<van-popup 
+			v-model="showDetailToggle" 
+			closeable 
+			close-icon="arrow-left" 
+			close-icon-position="top-left" 
+			get-container="body"
+			position="right"
+		 	:overlay="false" 
+		 	:get-container="collection" 
+		 	:style="{ height: '100%', width: '100%' }"
+		 >
+			<detail :eventid="eventId" :detailid="detailId" :pageType="'coll'" @backHandle="detailClose" :fid="fidd"></detail>
 		</van-popup>
 
-		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list></event-list>
+		<van-popup 
+			v-model="showLinkEventToggle" 
+			position="bottom" 
+			:style="{ height: '80%' }" 
+			get-container="body"
+			closeable 
+			close-icon-position="top-left"
+		>
+			<event-list :eventType="'favo'" :fid="fidd" :eid="eventId" :aid="detailId"></event-list>
+		</van-popup>
+
+		<van-popup
+			v-model="pushToggle"
+			position="bottom"
+			get-container="body"
+			:style="{ height: '23%' }"
+		>
+			<push-to :fidlist="[...fidlist]" :eventlist="[...eventlist]" :idlist="[...idlist]" :linkurl="detailUrl" :linktoggle="linkToggle"></push-to>
 		</van-popup>
 
 	</div>
 </template>
 
 <script>
-	import {
-		Toast
-	} from 'vant';
+	import { Toast, Dialog } from 'vant';
 	import {
 		mapState
 	} from 'vuex';
 	import Detail from '@c/common/Detail';
-	import EventList from '@c/center/EventList';
+	import EventList from '@c/common/EventList';
+	import PushTo from '@c/mine/PushTo';
 	export default {
-		name: 'list',
+		name: 'store-list',
 		components: {
 			Detail,
-			EventList
+			EventList,
+			PushTo
 		},
 		data() {
 			return {
+				linkToggle: false,
+				pushToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
 				finished: false,
+				errored: false,
 				allchecked: false,
-				newlist: [{
-					id: '1',
-					checked: false,
-					type: '正',
-					number: 8,
-					timer: 5,
-					source: 1,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}, {
-					id: '2',
-					checked: false,
-					type: '负',
-					number: 3,
-					timer: 9,
-					source: 2,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}, {
-					id: '3',
-					checked: false,
-					type: '负',
-					number: 3,
-					timer: 9,
-					source: 2,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}]
+				newlist: [],
+				page: 0,
+				fidd: '',
+				eventId: '',
+				detailId: '',
+				detailUrl: '',
+				eventlist: [],
+				idlist: [],
+				fidlist: []
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggleColl'])
+			...mapState(['checkboxToggleColl', 'collEventList', 'collQuery'])
 		},
 		watch: {
+			page(val) {
+				this.collQuery.page = val
+			},
 			allchecked(val) {
 				if (val) {
-					this.newlist.forEach((item) => {
+					this.collEventList.forEach((item) => {
 						item.checked = true
 					})
 				} else {
-					this.newlist.forEach((item) => {
+					this.collEventList.forEach((item) => {
 						item.checked = false
 					})
 				}
 			}
 		},
+		filters: {
+			textLength(val) {
+				if(val.length > 40) {
+					return val.slice(0, 38) + '...'
+				}else {
+					return val
+				}
+			}
+		},
+		mounted() {
+			this.getList()
+		},
 		methods: {
+			onClickOnePush(id, eid, fid, url) {
+				this.linkToggle = true
+				this.detailId = id
+				this.eventId = eid
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidd = fid
+				this.detailUrl = url
+				this.pushToggle = true
+			},
+			onClickOneStore(id) {
+				Dialog.confirm({
+					message: '确定取消收藏该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.$store.state.userid,
+							main_id: id
+						}
+					}).then((res) => {
+						for(let i=0; i<this.collEventList.length; i++) {
+							if(this.collEventList[i].checked) {
+								this.collEventList.splice(i, 1)
+							}
+						}
+						Toast.success(res.data.msg)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				})
+			},
+			detailClose(data) {
+				console.log(data)
+				this.showDetailToggle = false
+			},
+			getList() {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Favo/getList',
+					data: this.collQuery
+				}).then((res) => {
+					if(res.data.data.length > 0) {
+						this.$store.commit('handleCollList', this.collEventList.concat(res.data.data))
+						this.page ++
+					}else {
+						this.finished = true;
+					}
+					this.loading = false
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+					this.loading = false
+					this.errored = true
+				})
+			},
 			onClickRadio(id) {
 				console.log(id)
 			},
 			onLoad() {
-				// console.log('load')
-				// 异步更新数据
 				setTimeout(() => {
-					// for (let i = 0; i < 10; i++) {
-					//   this.list.push(this.list.length + 1);
-					// }
+
+					this.getList()
 					// 加载状态结束
 					// this.loading = false;
 
@@ -251,27 +251,38 @@
 					if (this.newlist.length >= 40) {
 						this.finished = true;
 					}
-				}, 500);
+				}, 2000);
 			},
-			openDetail(id) {
+			openDetail(eid, id, fid) {
+				this.eventId = eid
+				this.detailId = id
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidd = fid
 				this.showDetailToggle = true
 			},
-			onLinkEvent(id) {
-				console.log(id)
+			onLinkEvent(eid, id, fid) {
+				this.eventId = eid
+				this.detailId = id
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidd = fid
 				this.showLinkEventToggle = true
 			},
 			collection() {
 				return document.querySelector('.collection')
 			},
 			onClickPush() {
-				let arr = []
-				for (let i = 0; i < this.newlist.length; i++) {
-					if (this.newlist[i].checked) {
-						arr.push(this.newlist[i].id)
+				this.linkToggle = false
+				for (let i = 0; i < this.collEventList.length; i++) {
+					if (this.collEventList[i].checked) {
+						this.idlist.push(this.collEventList[i].id)
+						this.eventlist.push(this.collEventList[i].event_id)
+						this.fidlist.push(this.collEventList[i].fid || '-1')
 					}
 				}
-				if (arr.length > 0) {
-					// 走接口
+				if (this.idlist.length > 0) {
+					this.pushToggle = true
 				} else {
 					Toast('你还没有选择事件哦')
 				}
@@ -284,7 +295,26 @@
 					}
 				}
 				if (arr.length > 0) {
-					// 走接口
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.$store.state.userid,
+							main_id: arr
+						}
+					}).then((res) => {
+						if(res.data.status == 1) {
+							for(let i=0; i<this.newlist.length; i++) {
+								if(this.newlist[i].checked) {
+									this.newlist.splice(i, 1)
+								}
+							}
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
 				} else {
 					Toast('你还没有选择事件哦')
 				}
@@ -417,11 +447,17 @@
 				line-height: px2rem(22);
 
 				.timer-left {
+					display: flex;
 					font-size: px2rem(12);
 					color: #6f7ea0;
 
 					i {
 						margin-right: px2rem(10);
+					}
+					img {
+						margin-right: px2rem(5);
+						width: px2rem(18);
+						height: px2rem(18);
 					}
 				}
 

@@ -27,7 +27,19 @@
 		  :overlay="false"
 		  :style="{ height: '100%', width: '100%' }"
 		>
-			<time-filter></time-filter>
+			<time-filter :sorttype="this.sort_type" :pageType="hotType" @closePopup="handleBack"></time-filter>
+		</van-popup>
+
+		<!-- 地域选择 -->
+		<van-popup
+			v-model="region"
+			round
+			closeable
+			close-icon-position="top-left"
+			position="bottom"
+			:style="{ height: '70%' }"
+		>
+			<area-chooice @closeArea="handleClose"></area-chooice>
 		</van-popup>
 	</div>
 </template>
@@ -35,17 +47,21 @@
 <script>
 import { mapState } from 'vuex';
 import TimeFilter from '@c/common/TimeFilter';
+import AreaChooice from '@c/common/AreaList';
 export default {
 	name: 'hottest',
 	props: {
 		hotType: String
 	},
 	components: {
-		TimeFilter
+		TimeFilter,
+		AreaChooice
 	},
 	data() {
 		return {
+			region: false,
 			show: false,
+			sort_type: '',
 			list: [{
 				id: 1,
 				title: '最新',
@@ -58,9 +74,15 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['pickerName'])
+		...mapState(['pickerName', 'monitorQuery'])
 	},
 	methods: {
+		handleClose() {
+			this.region = false
+		},
+		handleBack() {
+			this.show = false
+		},
 		onClickHandle(index, id) {
 			this.list.forEach((item) => {
 				item.className = ''
@@ -68,14 +90,49 @@ export default {
 			this.list[index].className = 'active'
 			if(id == '1') {
 				this.$emit('get-type', id)
+				this.sort_type = ''
+				if(this.hotType == 'centerpage') {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Monitor/getESearch',
+						data: this.monitorQuery
+					}).then((res) => {
+						let list = res.data.data.eventList
+						list.forEach((item, index) => {
+							item.wordStr = item.wordStr.split('+')
+						})
+						this.$store.commit('handleMonitorList', list)
+						this.show = false
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}
 			}else {
 				this.$emit('get-type', id)
+				this.sort_type = 'sim_index'
+				if(this.hotType == 'centerpage') {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Monitor/getESearch',
+						data: this.monitorQuery
+					}).then((res) => {
+						let list = res.data.data.eventList
+						list.forEach((item, index) => {
+							item.wordStr = item.wordStr.split('+')
+						})
+						this.$store.commit('handleMonitorList', list)
+						this.show = false
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}
 			}
 		},
 		onClickAddress() {
-      		this.$store.commit('handleOverlay', true)
+			this.region = true
 
-			this.$store.commit('handleAddress', true)
+      		// this.$store.commit('handleOverlay', true)
+			// this.$store.commit('handleAddress', true)
 		},
 		onClickFilter() {
 			this.show = true

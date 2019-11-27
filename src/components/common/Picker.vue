@@ -1,14 +1,6 @@
 <template>
 	<div class="picker-wrapper" v-if="showPicker">
-		<van-area :area-list="arealist" value="110101" @confirm="onConfirm" />
-	<!-- <van-popup v-model="showPicker" position="bottom" :overlay="false">
-	  <van-picker
-	    show-toolbar
-	    :columns="columns"
-	    @cancel="close"
-	    @confirm="onConfirm"
-	  />
-	</van-popup> -->
+		<van-area :area-list="arealist" value="110101" @confirm="onConfirm" columns-num="4" />
 	</div>
 </template>
 
@@ -18,15 +10,15 @@ export default {
 	name: 'picker',
 	data() {
 		return {
-			value: '',
-			columns: ['杭州', '宁波', '温州', '嘉兴', '湖州']
+			show: true,
+			value: ''
 		}
 	},
 	computed: {
 		...mapState({
 			showPicker: state => state.showPicker,
 			pickerName: state => state.pickerName,
-			arealist: state => state.area
+			arealist: state => state.arealist
 		})
 	},
 	methods: {
@@ -35,7 +27,24 @@ export default {
 	      this.$store.commit('handleAddressName', value[value.length-1].name)
 	      this.$store.commit('handleAddress', false)
       	this.$store.commit('handleOverlay', false)
-
+      	for(let key in this.arealist.county_list) {
+      		if(this.arealist.county_list[key] == value[value.length-1].name) {
+      			this.$store.state.monitorQuery.areaid = key
+      		}
+      	}
+      	this.$axios({
+					method: 'post',
+					url: '/index.php/Monitor/getESearch',
+					data: this.monitorQuery
+				}).then((res) => {
+					let list = res.data.data.eventList
+					list.forEach((item, index) => {
+						item.wordStr = item.wordStr.split('+')
+					})
+					this.$store.commit('handleMonitorList', list)
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
 	  },
 	  close() {
 	      this.$store.commit('handleAddress', false)

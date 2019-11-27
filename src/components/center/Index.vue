@@ -1,15 +1,23 @@
 <template>
 	<div class="center-wrap">
-		<search></search>
-		<van-tabs v-model="active" :line-width="14" title-active-color="#323948" title-inactive-color="#d3dbeb" :border='false' @change="getTabs">
-			<van-tab v-for="item in list" :title="item.title" :key="item.id"></van-tab>
+		<search :pageType="'monitor'"></search>
+		<van-tabs 
+			v-model="active" 
+			:line-width="14" 
+			title-active-color="#323948" 
+			title-inactive-color="#d3dbeb" 
+			:border='false'
+			@change="getTabs"
+		>
+			<van-tab v-for="item in flist" :title="item.title" :key="item.id"></van-tab>
 		</van-tabs>
 		<hottest hotType="centerpage"></hottest>
-		<text-list />
+		<text-list :fidd="fidd"/>
 	</div>
 </template>
 
 <script>
+import { Toast } from 'vant';
 import Search from '@c/common/Search';
 import Hottest from '@c/common/Hottest';
 import TextList from '@c/center/List';
@@ -23,27 +31,43 @@ export default {
 	data() {
 		return {
 			active: 0,
-			list: [{
-				id: 1,
-				title: '方案一'
-			}, {
-				id: 2,
-				title: '方案二'
-			}, {
-				id: 3,
-				title: '方案三'
-			}, {
-				id: 4,
-				title: '方案四'
-			}, {
-				id: 5,
-				title: '方案五'
-			}]
+			flist: [],
+			search_val: {},
+			fidd: ''
 		}
 	},
+	watch: {
+		active(index) {
+			this.$store.state.fid = this.flist[index].id
+			this.fidd = this.flist[index].id
+		} 
+	},
+	mounted() {
+		this.getPlanList()
+	},
 	methods: {
+		getData(data) {
+			this.search_val = data
+		},
+		getPlanList() {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Monitor/getPlanList',
+				data: {
+					uid: this.$store.state.userid
+				}
+			}).then((res) => {
+				this.flist = res.data.data
+				this.fidd = res.data.data[0].id
+				this.$store.state.fid = res.data.data[0].id
+				this.$store.state.monitorQuery.fid = res.data.data[0].id
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
+		},
 		getTabs() {
 			console.log(this.active)
+
 		}
 	}
 }

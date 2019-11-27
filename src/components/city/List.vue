@@ -1,9 +1,17 @@
 <template>
 	<div class="list">
 
-		<van-list v-model="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
+		<van-list 
+			class="list-inner"
+			v-model="loading" 
+			:error.sync="errored" 
+			error-text="请求失败，点击重新加载" 
+			:finished="finished" 
+			finished-text="没有更多了" 
+			@load="onLoad"
+		>
 
-			<van-swipe-cell v-for="item in newlist" :key="item.id">
+			<van-swipe-cell v-for="item in cityEventList" :key="item.id">
 
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
@@ -66,7 +74,7 @@
 		<!-- 详情页 -->
 		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
 		 :overlay="false" :style="{ height: '100%', width: '100%' }">
-			<detail :detailid="detail_id" :eventid="event_id" :deletebtn="false"></detail>
+			<detail :detailid="detail_id" :eventid="event_id" :deletebtn="false" :pageType="'city'"></detail>
 		</van-popup>
 
 		<!-- 相似事件 -->
@@ -76,7 +84,7 @@
 
 		<!-- 去推送 -->
 		<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
-			<push-to @closeThis="closePush" :idlist="idList" :eventlist="eventidList"></push-to>
+			<push-to @closeThis="closePush" :idlist="idList" :eventlist="eventidList" :linktoggle="linkToggle"></push-to>
 		</van-popup>
 
 	</div>
@@ -84,12 +92,12 @@
 
 <script>
 	import { mapState } from 'vuex';
-	import { Toast } from 'vant';
+	import { Toast, Dialog } from 'vant';
 	import Detail from '@c/common/Detail';
-	import EventList from '@c/center/EventList';
+	import EventList from '@c/common/EventList';
 	import PushTo from '@c/common/PushTo';
 	export default {
-		name: 'list',
+		name: 'city-list',
 		components: {
 			Detail,
 			EventList,
@@ -98,11 +106,13 @@
 		props: ['cityhot'],
 		data() {
 			return {
+				linkToggle: false,
 				pushToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
 				finished: false,
+				errored: false,
 				allchecked: false,
 				newlist: [],
 				event_id: '',
@@ -110,24 +120,31 @@
 				detail_id: '',
 				idList: [],
 				eventidList: [],
-				page: 2
+				page: 0,
+				sort_type: ''
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggleCity'])
+			...mapState(['checkboxToggleCity', 'cityEventList', 'cityQuery'])
 		},
 		watch: {
+			cityEventList(data) {
+				if(data.length <= 3) {
+					this.loading = true
+					this.getCityData()
+
+				}
+			},
 			newlist(data) {
 				// console.log('123')
 			},
 			cityhot(val) {
-				let sim = ''
 				if (val == '1') {
-					sim = ''
+					this.sort_type = ''
 				} else {
-					sim = 'sim_index'
+					this.sort_type = 'sim_index'
 				}
-				this.getCityData(sim)
+				this.getCityData(this.sort_type)
 			},
 			allchecked(val) {
 				if (val) {
@@ -139,11 +156,18 @@
 						item.checked = false
 					})
 				}
+			},
+			page(val) {
+				this.cityQuery.page = val
 			}
 		},
 		filters: {
 			textLength(val) {
-				return val.slice(0, 38) + '...'
+				if(val.length > 40) {
+					return val.slice(0, 38) + '...'
+				}else {
+					return val
+				}
 			}
 		},
 		mounted() {
@@ -151,21 +175,26 @@
 		},
 		methods: {
 			onClickOneStore(id, eid) {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/favorite',
-					data: {
-						uid: this.$store.state.userid,
-						main_id: id,
-						event_id: eid
-					}
-				}).then((res) => {
-					Toast.success(res.data.msg)
-				}).then((res) => {
-					Toast.fail(res.data.msg)
+				Dialog.confirm({
+					message: '收藏此条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/favorite',
+						data: {
+							uid: this.$store.state.userid,
+							main_id: id,
+							event_id: eid
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+					}).then((res) => {
+						Toast.fail(res.data.msg)
+					})
 				})
 			},
 			onClickOnePush(id) {
+				this.linkToggle = true
 				for(let i=0; i<this.newlist.length; i++) {
 					if(this.newlist[i].id == id) {
 						this.newlist[i].checked = true
@@ -173,19 +202,37 @@
 						this.newlist[i].checked = false
 					}
 				}
-				this.onClickPush()
+				this.idList = []
+				this.eventidList = []
+				for (let i = 0; i < this.newlist.length; i++) {
+					if (this.newlist[i].checked) {
+						this.idList.push(this.newlist[i].id)
+						this.eventidList.push(this.newlist[i].event_id)
+					}
+				}
+				if (this.idList.length > 0) {
+					this.pushToggle = true
+				} else {
+					Toast('你还没有选择事件哦')
+				}
 			},
 			getCityData(type) {
 				this.$axios({
 					method: 'post',
 					url: '/index.php/City/getESearch',
-					data: {
-						uid: this.$store.state.userid,
-						sort_type: type
-					}
+					data: this.cityQuery
 				}).then((res) => {
-					this.newlist = res.data.data.eventList
+					if(res.data.data.eventList.length > 0) {
+						this.newlist = this.newlist.concat(res.data.data.eventList)
+						this.$store.commit('handleCityList', this.newlist)
+						this.page++
+					}else {
+						this.finished = true;
+					}
+					this.loading = false
 				}).catch(() => {
+					this.loading = false
+					this.errored = true
 					Toast.fail(res.data.msg)
 				})
 			},
@@ -195,34 +242,7 @@
 			onLoad() {
 				// 异步更新数据
 				setTimeout(() => {
-					this.$axios({
-						method: 'post',
-						url: '/index.php/City/getESearch',
-						data: {
-							uid: this.$store.state.userid,
-							page: this.page
-						}
-					}).then((res) => {
-						if(res.data.data.eventList.length > 0) {
-							this.newlist = this.newlist.concat(res.data.data.eventList)
-							this.page++
-						}else {
-							this.finished = true;
-						}
-					}).catch(() => {
-						Toast.fail(res.data.msg)
-					})
-					
-					// for (let i = 0; i < 10; i++) {
-					//   this.list.push(this.list.length + 1);
-					// }
-					// 加载状态结束
-					this.loading = false;
-
-					// 数据全部加载完成
-					// if (this.newlist.length >= 40) {
-					// 	this.finished = true;
-					// }
+					this.getCityData()
 				}, 2000);
 			},
 			openDetail(eid, aid, id) {
@@ -242,6 +262,7 @@
 
 			},
 			onClickPush() {
+				this.linkToggle = false
 				this.idList = []
 				this.eventidList = []
 				for (let i = 0; i < this.newlist.length; i++) {
@@ -264,9 +285,18 @@
 	@import '@css/constants.scss';
 
 	.list {
-		padding-bottom: px2rem(50);
+		padding-bottom: px2rem(20);
 		font-size: 15px;
-
+		position: absolute;
+		top: px2rem(90);
+		left: 0;
+		right: 0;
+		bottom: px2rem(25);
+		overflow: hidden;
+		.list-inner {
+			height: 100%;
+			overflow: auto;
+		}
 		.van-popup {
 			overflow: hidden;
 		}

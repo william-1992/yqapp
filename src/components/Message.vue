@@ -5,9 +5,11 @@
 				<span v-for="(item, index) in tabsList" :key="item.id" :class="item.class" @click="getTabs(index, item.name)">{{ item.name }}</span>
 			</p>
 		</div>
-		<mes-index v-if="pageName === '预警'"></mes-index>
-		<mes-push v-else-if="pageName === '推送'"></mes-push>
-		<mes-placard v-else></mes-placard>
+		<div class="message-content-wrap">
+			<mes-index v-if="pageName === '预警'"></mes-index>
+			<mes-push v-else-if="pageName === '推送'"></mes-push>
+			<mes-placard v-else></mes-placard>
+		</div>
 	</div>
 </template>
 
@@ -67,10 +69,15 @@ export default {
 @import '@css/constants.scss';
 .message-wrap {
 	.mes_tabs {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
 		height: px2rem(22);
 		padding: px2rem(20) px2rem(16);
 		padding-bottom: px2rem(0);
 		background-color: #fff;
+		z-index: 1000;
 		span {
 			margin-right: px2rem(20);
 			font-size: px2rem(16);
@@ -81,6 +88,12 @@ export default {
 			font-size: px2rem(20);
 			color: $activeColor;
 		}
+	}
+	.message-content-wrap {
+		position: absolute;
+		top: px2rem(40);
+		left: 0;
+		right: 0;
 	}
 }
 </style>

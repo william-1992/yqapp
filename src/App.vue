@@ -22,8 +22,8 @@ export default {
 	mounted() {
 		let a = crypto.encrypt('欢迎登陆', 'hAw6eqnFLKxpsDv3');
 		let b = crypto.decrypt(a, 'hAw6eqnFLKxpsDv3');
-		console.log('加密后：' + a)
-		console.log('解密后：' + b)
+		// console.log('加密后：' + a)
+		// console.log('解密后：' + b)
 		this.arrend = this.unique(this.arrtry)
 	},
 	methods: {

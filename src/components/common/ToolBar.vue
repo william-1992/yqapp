@@ -14,8 +14,8 @@ import { mapState } from 'vuex';
 export default {
 	data() {
 		return {
-			active: 0,
-			componentName: 'center',
+			active: 1,
+			componentName: 'message',
 			list: [{
 				title: '监测中心',
 				default: require('@img/nav-center1.png'),

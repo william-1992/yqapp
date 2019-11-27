@@ -1,0 +1,55 @@
+{
+  "status": 1,
+  "msg": "获取相似事件成功！",
+  "data": {
+    "num": 1,
+    "list": [
+      {
+        "docid": "9070249649525559942",
+        "time": "1570780496",
+        "event_title": "“好记者讲好故事”2018年中国记者节特别节目广受好评",
+        "event_url": "http://www.xinhuanet.com//zgjx/2018-11/13/c_137603051.htm",
+        "timeStr": "2018-12-13 19:02:56",
+        "site_name": "新华网体育",
+		"checked": true
+      },
+	  {
+        "docid": "9070249649525559942",
+        "time": "1570780496",
+        "event_title": "“好记者讲好故事”2018年中国记者节特别节目广受好评",
+        "event_url": "http://www.xinhuanet.com//zgjx/2018-11/13/c_137603051.htm",
+        "timeStr": "2018-12-13 19:02:56",
+        "site_name": "新华网体育",
+		"checked": true
+      },
+	  {
+        "docid": "9070249649525559942",
+        "time": "1570780496",
+        "event_title": "“好记者讲好故事”2018年中国记者节特别节目广受好评",
+        "event_url": "http://www.xinhuanet.com//zgjx/2018-11/13/c_137603051.htm",
+        "timeStr": "2018-12-13 19:02:56",
+        "site_name": "新华网体育",
+		"checked": true
+      }
+    ],
+    "top": {
+      "start": {
+        "docid": "9070249649525559942",
+        "time": "1570780496",
+        "event_title": "“好记者讲好故事”2018年中国记者节特别节目广受好评",
+        "event_url": "http://www.xinhuanet.com//zgjx/2018-11/13/c_137603051.htm",
+        "timeStr": "2018-12-13 19:02:56",
+        "site_name": "新华网体育"
+      },
+      "end": {
+        "docid": "9070249649525559942",
+        "time": "1570780496",
+        "event_title": "“好记者讲好故事”2018年中国记者节特别节目广受好评",
+        "event_url": "http://www.xinhuanet.com//zgjx/2018-11/13/c_137603051.htm",
+        "timeStr": "2018-12-13 19:02:56",
+        "site_name": "新华网体育"
+      }
+    }
+  },
+  "code": 0
+}

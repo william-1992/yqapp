@@ -13,10 +13,6 @@
 				<img src="@img/push-bg3.png">
 				<p>复制链接</p>
 			</li>
-			<!-- <li v-for="(item, index) in pushlist" :key="item.id" @click="onClick(index)" v-if="item.toggle">
-				<img :src="item.url">
-				<p>{{item.title}}</p>
-			</li> -->
 		</ul>
 		<footer>
 			<van-button type="default" size="large" @click="onClose">取消</van-button>
@@ -30,7 +26,7 @@
 			position="right" 
 			:style="{ height: '100%', width: '100%' }"
 		>
-			<push-page :idlist="idlist" :eventlist="eventlist" :fid="fid"></push-page>
+			<push-page :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true"></push-page>
 		</van-popup>
 
 		<van-popup 
@@ -41,7 +37,7 @@
 			position="right" 
 			:style="{ height: '100%', width: '100%' }"
 		>
-			<push-page-two :idlist="idlist" :eventlist="eventlist" :fid="fid"></push-page-two>
+			<push-page-two :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true"></push-page-two>
 		</van-popup>
 
 	</div>
@@ -55,20 +51,20 @@ import PushPageTwo from '@c/common/PushPageTwo';
 export default {
 	name: 'pushto',
 	props: {
-		fid: {
-			type: String,
-			default: ''
-		},
-		idlist: Array,
-		eventlist: Array,
 		linktoggle: {
 			type: Boolean,
-			default: false
+			default: true
 		},
 		linkurl: {
 			type: String,
 			default: ''
-		}
+		},
+		fidlist: {
+			type: Array,
+			default: ''
+		},
+		idlist: Array,
+		eventlist: Array
 	},
 	components: {
 		PushPage,

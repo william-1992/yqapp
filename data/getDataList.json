@@ -1,0 +1,35 @@
+{
+    "status":1,
+    "msg":"",
+    "data":[
+        {
+            "id":"1",
+            "token":"0517b3a6c349b9441698",
+            "uid":"1",
+            "fid":"214",
+            "cust_id":"235",
+            "event_main_id":"0",
+            "event_id":"9480250289163998418",
+            "title":"拼“命”赚钱的自如，良心不会痛吗？",
+            "url":"http://tech.ikanchai.com/article/20190516/286869.shtml",
+            "words":"中毒:1,超标:1,美团:2,口碑:2",
+            "pubtime":"1558001160",
+            "warn_type":"1",
+            "rec_uid":"188,189",
+            "point":"1",
+            "level":"2",
+            "mobile":"",
+            "email":"",
+            "status":"0",
+            "readtype":"0",
+            "qa_status":"1",
+            "add_time":"1558051274",
+            "day":"20190517",
+            "pubtimeStr":"6月",
+            "f_title":"",
+            "event_uptime":"6月"
+        }
+    ],
+    "code":0
+}
+

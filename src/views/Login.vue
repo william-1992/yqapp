@@ -16,9 +16,7 @@
       <img @click="onClickPass" class="eye" :src="eyesUrl" />
       <p class="marning">{{ message }}</p>
     </div>
-    <van-button type="primary" size="large" color="#6f7ea0" @click="onLogin"
-      >登录</van-button
-    >
+    <van-button type="primary" size="large" color="#6f7ea0" @click="onLogin">登录</van-button>
   </div>
 </template>
 
@@ -42,21 +40,29 @@ export default {
   methods: {
     onLogin() {
       this.$axios({
-        method: "get",
+        method: "post",
         url: "/index.php/Login/doLogin",
         data: {
           username: this.username,
           password: this.password
         }
       }).then((res) => {
-		if(res.data.status == '1') {
-			this.$store.state.nickname = res.data.data.login.nickname
-			this.$store.state.userid = res.data.data.login.id
-			this.$store.state.company_name = res.data.data.login.company_name
-			this.$store.commit("handleLogin", false)
-		}
+  			this.$store.state.nickname = res.data.data.login.nickname
+  			this.$store.state.userid = res.data.data.login.id
+        this.$store.state.monitorQuery.uid = res.data.data.login.id
+        this.$store.state.cityQuery.uid = res.data.data.login.id
+        this.$store.state.collQuery.uid = res.data.data.login.id
+        this.$store.state.warnQuery.uid = res.data.data.login.id
+  			this.$store.state.company_name = res.data.data.login.company_name
+        this.$store.state.company_short_name = res.data.data.login.company_short_name
+  			// this.$store.commit("handleLogin", false)
+        this.$store.commit('handleToken', res.data.data.login.token);
+        this.$router.push('/home')
+        localStorage.setItem("token", res.data.data.login.token);
+        console.log('true')
       }).catch((res) => {
         this.message = res.msg
+        console.log('false')
       });
     },
     onClickPass() {

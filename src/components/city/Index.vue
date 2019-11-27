@@ -1,6 +1,6 @@
 <template>
 	<div class="city-index">
-		<search></search>
+		<search :pageType="'city'"></search>
 		<hottest hotType="citypage" @get-type="getType"></hottest>
 		<text-list :cityhot="cityHotType"></text-list>
 	</div>

@@ -11,7 +11,10 @@
 			"role_id": "0",
 			"identity": "1",
 			"company_name": "杭州衛戍科技信息技術有限公司",
-			"company_short_name": "衛戍科技"
+			"company_short_name": "衛戍科技",
+			"sub_id": "0",
+			"sub_username": "123",
+			"token": "345RTY555" 
 		}
 	},
 	"code": 0

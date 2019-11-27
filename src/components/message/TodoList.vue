@@ -1,150 +1,146 @@
 <template>
 	<div class="list">
 
-		<van-list v-model="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
+		<van-list 
+			v-model="loading" 
+			:error.sync="errored"
+			error-text="请求失败，点击重新加载"
+			:finished="finished" 
+			finished-text="没有更多了" 
+			@load="onLoad"
+		>
 
 			<van-swipe-cell v-for="item in newlist" :key="item.id">
 
-				<div class="sign-type sign01" v-if="item.sign === '1'"><span>紧急</span></div>
-				<div class="sign-type sign02" v-else-if="item.sign === '2'"><span>严重</span></div>
-				<div class="sign-type sign03" v-else><span>一般</span></div>
+				<div class="sign-type sign01" v-if="item.warning_level === '2'"><span>紧急</span></div>
+				<div class="sign-type sign02" v-else-if="item.warning_level === '3'"><span>严重</span></div>
+				<div class="sign-type sign03" v-else-if="item.warning_level === '1'"><span>一般</span></div>
 
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
 					<div class="title">
 						<div class="left">
-							<van-checkbox v-show="checkboxToggle" v-model="item.checked" :key="item.id" :name="item.id" checked-color="#ff6651"
-							 @change="onClickRadio(item.id)"></van-checkbox>
-							<!-- <div class="rect">{{ item.type }}</div> -->
-							<div class="frie" @click.stop="onLinkEvent(item.id)">{{ item.number }}</div>
-							<h2>食品安全</h2>
+							<div class="frie" @click.stop="onLinkEvent(item.id, item.event_main_id, item.fid || 0)">{{ item.docount }}</div>
+							<h2>{{ item.f_title }}</h2>
 						</div>
 						<div class="right">
-							{{item.timer}}小时前更新
+							{{item.uptimeStr}}前更新
 						</div>
 					</div>
 					<div class="timer">
 						<div class="timer-left">
-							<i class="iconfont">&#xe623;</i>
-							<span v-if="item.source == 1">博客</span>
-							<span v-else-if="item.source == 2">微信</span>
-							<span v-else>头条</span>
+							<img v-if="item.site_icon_type == 2" src="../../assets/images/newicon05.png" />
+							<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon01.png" />
+							<img v-else-if="item.site_icon_type == 10" src="../../assets/images/newicon12.png" />
+							<img v-else-if="item.site_icon_type == 20" src="../../assets/images/newicon09.png" />
+							<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
+							<img v-else-if="item.site_icon_type == 3" src="../../assets/images/newicon03.png" />
+							<img v-else-if="item.site_icon_type == 9" src="../../assets/images/newicon04.png" />
+							<img v-else-if="item.site_icon_type == 4" src="../../assets/images/newicon07.png" />
+							<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
+							<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
+							<img v-else src="../../assets/images/newicon11.png" />
+							<span>{{ item.site_name }}</span>
 						</div>
 						<div class="timer-right">
-							首次收录： {{item.firstTime}}
+							首次收录： {{item.pretimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.id)">
-						<p>{{item.des}}</p>
+					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid || 0)">
+						<p>{{item.title}}</p>
 					</div>
 					<div class="tags">
 						<h5>监控词组：</h5>
 						<p>
-							<span v-for="(val, index) in item.tags" :key="index">{{val.title}}</span>
+							<span v-for="(val, index) in item.ewords" :key="index">{{val}}</span>
 						</p>
 					</div>
 					<!-- 待办事项/我发起的/我转发的 -->
 					<div class="upcome">
-						<div class="upcome-des">
+
+						<div class="upcome-des" v-for="(ite, index) in item.logs" :key="ite.id">
 							<div class="upcome-des-left">
-								<p>推送人： 张红</p>
-								<p>留言： 这件事情尽快处理</p>
+								<p>推送人： {{ ite.from_nickname }}</p>
+								<p>留言： {{ ite.remark }}</p>
 							</div>
 							<div class="upcome-des-right">
-								<img src="@img/speed1.png">
+								<img v-if="item.my_is_over == '1'" src="@img/speed3.png">
+								<img v-else src="@img/speed1.png">
 							</div>
 						</div>
 
-						<div class="upcome-btn" v-if="pushType === 'upcoming'">
-							<van-button plain type="primary" color="#6f7ea0" size="small">一键转发</van-button>
-							<van-button color="#6f7ea0" size="small">完成</van-button>
-						</div>
-
-						<div class="launch-list" v-else-if="pushType === 'launch'">
-							<ul v-if="launchToggle">
-								<li>
-									<div class="launch-time">
-										<h6>09-12</h6>
-										<p>11:56</p>
-									</div>
-									<div class="launch-line">
-										<van-icon name="circle" />
-										<div class="line1"></div>
-									</div>
-									<div class="launch-des">
-										<h6>张红转发给小明</h6>
-										<p>留言：这是上级的任务，你去完成一下</p>
-									</div>
-								</li>
-								<li>
-									<div class="launch-time">
-										<h6>09-12</h6>
-										<p>11:56</p>
-									</div>
-									<div class="launch-line">
-										<van-icon name="circle" />
-										<div class="line1"></div>
-									</div>
-									<div class="launch-des">
-										<h6>
-											<span>张红转发给小明</span>
-											<span>催一下</span>
-										</h6>
-										<p>留言：这是上级的任务，你去完成一下</p>
-									</div>
-								</li>
-							</ul>
-							<div>
-								<van-button v-if="launchToggle" type="primary" size="large" color="#fff" @click.stop="onClickLaunch(2)">收起
-									<van-icon name="arrow-up" />
-								</van-button>
-								<van-button v-else type="primary" size="large" color="#fff" @click.stop="onClickLaunch(1)">查看详情
-									<van-icon name="arrow-down" />
-								</van-button>
-							</div>
-						</div>
-
-						<div class="forward" v-else-if="pushType == 'forward'">
-							<p>已转发给： 张三</p>
-							<p>留言： 这件事情尽快处理，这边急着要结果，最好明天做好。</p>
+						<div class="upcome-btn" v-if="item.my_is_over !== '1'">
+							<van-button plain type="primary" color="#6f7ea0" size="small" @click="onClickPush(item.id, item.fid || 0)">一键转发</van-button>
+							<van-button color="#6f7ea0" size="small" @click="onClickFinish(item.id, item.fid || 0)">完成</van-button>
 						</div>
 
 					</div>
 				</div>
 				<!-- </van-cell> -->
 				<template slot="right">
-					<van-button type="default">
-						<i class="iconfont">&#xe623;</i><span>推送</span>
-					</van-button>
-					<van-button type="default">
+					<van-button type="default" @click="onClickOneStore(item.id, item.event_main_id, item.fid || 0)">
 						<i class="iconfont">&#xe6e7;</i>
 						<span>收藏</span>
-					</van-button>
-					<van-button type="default">
-						<i class="iconfont">&#xe6e9;</i>
-						<span>删除</span>
 					</van-button>
 				</template>
 			</van-swipe-cell>
 
 		</van-list>
 
-		<div class="allSelect" v-show="checkboxToggle">
-			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
-			<div class="btn-wrap">
-				<van-button color="#6f7ea0" plain size="small">删除</van-button>
-				<van-button color="#6f7ea0" size="small">推送</van-button>
-			</div>
-		</div>
-
-		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
-		 :overlay="false" :style="{ height: '100%', width: '100%' }">
-			<detail></detail>
+		<van-popup 
+			v-model="showDetailToggle" 
+			closeable 
+			close-icon="arrow-left" 
+			close-icon-position="top-left" 
+			position="right"
+			get-container="body"
+		 	:overlay="false" 
+		 	:style="{ height: '100%', width: '100%' }"
+		 >
+			<detail :detailid="pushId" :eventid="eventId" :pageType="'message'" :fid="fidd"></detail>
 		</van-popup>
 
-		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list></event-list>
+		<van-popup 
+			v-model="showLinkEventToggle" 
+			position="bottom" 
+			:style="{ height: '80%' }" 
+			get-container="body"
+			closeable 
+			close-icon-position="top-left"
+		>
+			<event-list :eventType="'message'" :fid="fidd" :eid="eventId" :aid="pushId"></event-list>
 		</van-popup>
+
+		<!-- 去推送 -->
+		<van-popup 
+			v-model="pushToggle" 
+			:overlay="false"
+			closeable 
+			close-icon-position="top-left" 
+			get-container="body"
+			position="right" 
+			:style="{ height: '100%', width: '100%' }"
+		>
+			<push-page :idlist="idList" :eventlist="eventidList" :pushid="pushId" :fid="fidd"></push-page>
+		</van-popup>
+
+		<!-- 完成点击弹框 -->
+		<van-dialog
+			v-model="finishToggle"
+			title="添加留言"
+			show-cancel-button
+			get-container='body'
+			@confirm="onClickConfirm"
+		>
+			<van-field
+				v-model="message"
+				rows="3"
+				autosize
+				type="textarea"
+				placeholder="请输入留言"
+				show-word-limit
+			></van-field>
+		</van-dialog>
 
 	</div>
 </template>
@@ -153,186 +149,144 @@
 	import {
 		mapState
 	} from 'vuex';
+	import { Toast, Dialog } from 'vant';
 	import Detail from '@c/common/Detail';
-	import EventList from '@c/center/EventList';
+	import EventList from '@c/common/EventList';
+	import PushPage from '@c/common/PushPage';
 	export default {
-		name: 'list',
-		props: {
-			pushType: String
-		},
+		name: 'todo-list',
 		components: {
 			Detail,
-			EventList
+			EventList,
+			PushPage
 		},
 		data() {
 			return {
+				message: '',
+				finishToggle: false,
+				pushToggle: false,
 				launchToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
 				finished: false,
+				errored: false,
 				allchecked: false,
-				newlist: [{
-					id: '1',
-					sign: '1',
-					checked: false,
-					type: '正',
-					number: 8,
-					timer: 5,
-					source: 1,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}, {
-					id: '2',
-					sign: '2',
-					checked: false,
-					type: '负',
-					number: 3,
-					timer: 9,
-					source: 2,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}, {
-					id: '3',
-					sign: '3',
-					checked: false,
-					type: '负',
-					number: 3,
-					timer: 9,
-					source: 2,
-					firstTime: '2018-09-9 10:23',
-					des: '邮箱是拥有国内用户最多、市场最大的邮箱就是巨作这次改版，特意从应用商城下载了各种邮...',
-					tags: [{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '有气味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-						{
-							title: '油漆味',
-							href: ''
-						},
-						{
-							title: '腐坏',
-							href: ''
-						},
-						{
-							title: '食品安全',
-							href: ''
-						},
-					]
-				}]
+				newlist: [],
+				idList: [],
+				eventidList: [],
+				pushId: '',
+				fidd: '',
+				eventId: '',
+				page: 0
 			}
 		},
 		computed: {
 			...mapState(['checkboxToggle'])
 		},
-		watch: {
-			allchecked(val) {
-				if (val) {
-					this.newlist.forEach((item) => {
-						item.checked = true
-					})
-				} else {
-					this.newlist.forEach((item) => {
-						item.checked = false
-					})
-				}
-			}
+		mounted() {
+			this.getTodoList()
 		},
 		methods: {
+			onClickOneStore(id, eid, fidd) {
+				this.fidd = fidd
+				Dialog.confirm({
+					message: '确定收藏？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/favorite',
+						data: {
+							uid: this.$store.state.userid,
+							main_id: id,
+							event_id: eid
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				})
+			},
+			onClickConfirm() {
+				if(this.message.length === 0) {
+					Toast.fail('请输入留言！')
+				}else {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Push/finish',
+						data: {
+							fid: this.fidd,
+							uid: this.$store.state.userid,
+							event_push_id: this.pushId,
+							remark: this.message
+						}
+					}).then((res) => {
+						Toast.success(res.data.msg)
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
+				}
+			},
+			onClickFinish(id, fidd) {
+				this.fidd = fidd
+				this.pushId = id
+				this.finishToggle = true
+			},
+			onClickPush(id, fidd) {
+				this.fidd = fidd
+				this.pushId = id
+				this.pushToggle = true
+			},
+			getTodoList() {
+				let timetype = ''
+				if(this.newlist.length > 0) {
+					timetype = this.newlist[this.newlist.length-1].up_time
+				}
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Push/getTodoList',
+					data: {
+						uid: this.$store.state.userid,
+						up_time: timetype
+					}
+				}).then((res) => {
+					if(res.data.data.length > 0) {
+						let list = res.data.data
+						for(let i=0; i<list.length; i++) {
+							list[i].ewords = list[i].ewords.split('+')
+						}
+						this.newlist = this.newlist.concat(list)
+						this.page++
+					}else {
+						this.finished = true;
+					}
+					this.loading = false
+				}).catch((res) => {
+					this.loading = false
+					this.errored = true
+					Toast.fail(res.data.msg)
+				})
+			},
 			onClickRadio(id) {
 				console.log(id)
 			},
 			onLoad() {
-				// console.log('load')
 				// 异步更新数据
 				setTimeout(() => {
-					// for (let i = 0; i < 10; i++) {
-					//   this.list.push(this.list.length + 1);
-					// }
-					// 加载状态结束
-					// this.loading = false;
-
-					// 数据全部加载完成
-					if (this.newlist.length >= 40) {
-						this.finished = true;
-					}
-				}, 500);
+					this.getTodoList()
+				}, 2000);
 			},
-			openDetail(id) {
+			openDetail(id, eid, fidd) {
+				this.pushId = id
+				this.eventId = eid
+				this.fidd = fidd
 				this.showDetailToggle = true
 			},
-			onLinkEvent(id) {
-				console.log(id)
+			onLinkEvent(id, fidd, eid) {
+				this.pushId = id
+				this.fidd = fidd
+				this.eventId = eid
 				this.showLinkEventToggle = true
 			},
 			onClickLaunch(type) {
@@ -490,11 +444,17 @@
 				line-height: px2rem(22);
 
 				.timer-left {
+					display: flex;
 					font-size: px2rem(12);
 					color: #6f7ea0;
 
 					i {
 						margin-right: px2rem(10);
+					}
+					img {
+						margin-right: px2rem(5);
+						width: px2rem(18);
+						height: px2rem(18);
 					}
 				}
 
@@ -548,8 +508,10 @@
 					display: flex;
 					justify-content: space-between;
 					align-items: center;
-					padding: px2rem(10);
-
+					padding: 0 px2rem(10) px2rem(10);
+					.upcome-des-right {
+						display: none;
+					}
 					p {
 						font-size: px2rem(14);
 						line-height: px2rem(26)
@@ -557,6 +519,12 @@
 
 					img {
 						width: px2rem(61);
+					}
+					&:first-child {
+						padding-top: px2rem(10);
+						.upcome-des-right {
+							display: inline-block;
+						}
 					}
 				}
 
