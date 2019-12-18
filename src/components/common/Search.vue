@@ -31,7 +31,6 @@
 					  v-model="value"
 					  placeholder="请输入搜索关键词"
 					  show-action
-					  @search="onSearch"
 					>
 					  <div slot="action" @click="onSearch">搜索</div>
 					</van-search>
@@ -40,13 +39,10 @@
 				<div class="search-history">
 					<div class="title">
 						<h5>历史记录</h5>
-						<span>清空历史记录</span>
+						<span @click="onClearHistory">清空历史记录</span>
 					</div>
 					<ul>
-						<li><a href="#">国庆七天小长假</a></li>
-						<li><a href="#">西藏今年7月份开始下雪</a></li>
-						<li><a href="#">内蒙停止暴乱</a></li>
-						<li><a href="#">今年双十一天猫店铺销售量达到百亿</a></li>
+						<li v-for="item in historylist" @click="onItemClick(item)"><a href="javascript:;">{{ item }}</a></li>
 					</ul>
 				</div>
 
@@ -58,6 +54,7 @@
 </template>
 
 <script>
+import { Toast, Dialog } from 'vant';
 import { mapState } from 'vuex';
 import Popup from '@c/common/Popup';
 export default {
@@ -74,6 +71,7 @@ export default {
 			popupToggle: true,
 			value: '',
 			value1: 1,
+			historylist: [],
       option1: [
         { text: '标题', value: 1 },
         { text: '内容', value: 2 }
@@ -104,13 +102,32 @@ export default {
 			if(this.pageType == 'monitor') {
 				this.$store.state.monitorQuery.keyword = val
 			}else if(this.pageType == 'city') {
-				this.$store.state.cityQuery.es_type = val
+				this.$store.state.cityQuery.keyword = val
 			}else {
 
 			}
 		}
 	},
+	mounted() {
+		this.getHistory()
+	},
 	methods: {
+		onClearHistory() {
+			Dialog.confirm({
+				message: '确定删除所有历史记录吗？'
+			}).then(() => {
+				localStorage.removeItem('history')
+				this.historylist = []
+			})
+		},
+		onItemClick(val) {
+			this.value = val
+			if(this.pageType == 'monitor') {
+				this.getMoni()
+			}else {
+				this.getCity()
+			}
+		},
 		onClickPopup() {
 			this.show = true
 			// this.$store.commit('handlePopup', true)
@@ -132,35 +149,76 @@ export default {
 		},
 		onSearch() {
 			if(this.pageType == 'monitor') {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/Monitor/getESearch',
-					data: this.monitorQuery
-				}).then((res) => {
-					let list = res.data.data.eventList
-					list.forEach((item, index) => {
-						item.wordStr = item.wordStr.split('+')
-					})
-					this.$store.commit('handleMonitorList', list)
-					this.show = false
-				}).catch((res) => {
-					Toast.fail(res.data.msg)
-				})
+				this.getMoni()
 			}else if(this.pageType == 'city') {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/getESearch',
-					data: this.cityQuery
-				}).then((res) => {
-					this.$store.commit('handleCityList', res.data.data.eventList)
-				}).catch(() => {
-					Toast.fail(res.data.msg)
-				})
+				this.getCity()
+			}
+			localStorage.setItem('history', JSON.stringify(this.historylist))
+			if(this.historylist.length > 0) {
+				this.historylist.unshift(this.value)
+			}else {
+				this.historylist.push(this.value)
+			}
+		},
+		getHistory() {
+			let list = JSON.parse(localStorage.getItem('history'))
+			if(list && list.length > 0) {
+				this.historylist = list
 			}
 		},
 		onClickBack() {
 			this.show = false
 			// this.$store.commit('handlePopup', false)
+		},
+		getMoni() {
+			this.$store.state.monitorQuery.page = 1
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Monitor/getESearch',
+				data: this.monitorQuery
+			}).then((res) => {
+				if(res.data.status == '1') {
+					let list = res.data.data.eventList
+					if(list.length > 0) {
+						list.forEach((item, index) => {
+							item.wordStr = item.wordStr.split('+')
+						})
+						this.$store.commit('handleMonitorList', list)
+					}
+					setTimeout(() => {
+						this.show = false
+					}, 500)
+					this.value = ''
+					Toast.success(res.data.msg)
+				}else {
+					Toast.fail(res.data.msg)
+				}
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
+		},
+		getCity() {
+			this.$store.state.cityQuery.page = 1
+			this.$axios({
+				method: 'post',
+				url: '/index.php/City/getESearch',
+				data: this.cityQuery
+			}).then((res) => {
+				if(res.data.status == '1') {
+					if(res.data.data.eventList.length > 0) {
+						this.$store.commit('handleCityList', res.data.data.eventList)
+					}
+					setTimeout(() => {
+						this.show = false
+					})
+					this.value = ''
+					Toast.success(res.data.msg)
+				}else {
+					Toast.fail(res.data.msg)
+				}
+			}).catch(() => {
+				Toast.fail(res.data.msg)
+			})
 		}
 	}
 }

@@ -1,16 +1,11 @@
 <template>
   <div class="home">
 
-    <!-- <login v-if="loginToggle"></login> -->
-
     <div>
-    	<keep-alive>
+    	<!-- <keep-alive>
     		<component :is="isComponent"></component>
-    	</keep-alive>
+    	</keep-alive> -->
 
-
-      <tool-bar v-show="toolbarToggle"></tool-bar>
-      <!-- <popup></popup> -->
       <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
       <picker></picker>
     </div>
@@ -18,20 +13,18 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 import Login from './Login';
-import ToolBar from '@c/common/ToolBar';
 import Center from '@c/Center';
 import City from '@c/City';
 import Message from '@c/Message';
 import Mine from '@c/Mine';
 import Popup from '@c/common/Popup';
 import Picker from '@c/common/Picker';
-export default {
+export default { 
   name: "home",
   components: {
     Login,
-    ToolBar,
     Popup,
     Picker,
   	'center': Center,
@@ -45,29 +38,52 @@ export default {
     }
   },
   computed: {
-    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle', 'token'])
+    ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle', 'token']),
+    ...mapGetters(['getUserid', 'getSubid'])
   },
   mounted() {
 
-    let windowH = (window.screen.height - window.innerHeight) + 20
-    // alert(windowH)
-    // this.$store.commit('handlePadding', windowH)
-    // this.paddingTo = windowH
-
     if(window.plus){
-    　　this.plusReady();
+    　this.plusReady();
     }else{
     　　document.addEventListener("plusready",this.plusReady,false);
     }
 
   },
   methods: {
+    // app设备绑定
     plusReady() {
       // 设置系统状态栏背景为红色/文字为黑色
     　plus.navigator.setStatusBarBackground( "#ffffff" );
       plus.navigator.setStatusBarStyle('dark');
       let navH = plus.navigator.getStatusbarHeight();
-      //alert(navH)
+
+      // 获取 APP 终端标识
+      let pinf = plus.push.getClientInfo();  
+      let cid = pinf.clientid;//客户端标识 
+      alert('cid' +":"+ cid)
+      
+      if(window.webkit) {
+        this.platform = '2'
+      }else {
+        this.platform = '1'
+      }
+      this.$axios({
+        method: 'post',
+        url: '/index.php/Apppush/register',
+        data: {
+          uid: this.getUserid,
+          sub_uid: this.getSubid,
+          partform: 'getui',
+          platform: this.platform,
+          device_id: cid
+        }
+      }).then((res) => {
+        alert(res.data.msg)
+      }).catch((res) => {
+        alert(res.data.msg)
+      })
+
     },
     closeOverlay() {
       this.$store.commit('handleOverlay', false)

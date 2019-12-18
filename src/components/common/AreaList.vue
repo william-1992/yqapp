@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 import BScroll from 'better-scroll';
 import { Toast } from 'vant';
 export default {
@@ -60,7 +60,8 @@ export default {
 		this.getArea()
 	},
 	computed: {
-		...mapState(['monitorQuery'])
+		...mapState(['monitorQuery']),
+		...mapGetters(['getUserid', 'getSubid'])
 	},
 	watch: {
 		ppid(id) {
@@ -100,11 +101,14 @@ export default {
 
 			this.namelist = this.namelist.slice(0, this.activeIndex+1)
 
-			if(this.namelist.length <= 4) {
+			if(this.namelist.length <= 4 && data.level < 4) {
+				console.log(data)
 				this.$axios({
 					method: 'post',
 					url: '/index.php/Monitor/getAreaChild',
 					data: {
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
 						fid: this.$store.state.monitorQuery.fid,
 						pid: this.ppid
 					}
@@ -135,6 +139,8 @@ export default {
 				method: 'post',
 				url: '/index.php/Monitor/getAreaChild',
 				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
 					fid: this.$store.state.fid,
 					pid: this.ppid
 				}

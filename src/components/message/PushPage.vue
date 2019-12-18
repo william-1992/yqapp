@@ -6,7 +6,6 @@
 			title-active-color="#323948" 
 			title-inactive-color="#acb7cf" 
 			:border="false"
-			:swipeable="true"
 			animated
 		>
 		  <van-tab title="待办事项" name="a">

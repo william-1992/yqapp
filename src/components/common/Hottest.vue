@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import { Toast } from 'vant';
 import { mapState } from 'vuex';
 import TimeFilter from '@c/common/TimeFilter';
 import AreaChooice from '@c/common/AreaList';
@@ -74,7 +75,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['pickerName', 'monitorQuery'])
+		...mapState(['pickerName', 'monitorQuery', 'cityQuery'])
 	},
 	methods: {
 		handleClose() {
@@ -89,43 +90,58 @@ export default {
 			})
 			this.list[index].className = 'active'
 			if(id == '1') {
-				this.$emit('get-type', id)
-				this.sort_type = ''
-				if(this.hotType == 'centerpage') {
-					this.$axios({
-						method: 'post',
-						url: '/index.php/Monitor/getESearch',
-						data: this.monitorQuery
-					}).then((res) => {
-						let list = res.data.data.eventList
-						list.forEach((item, index) => {
-							item.wordStr = item.wordStr.split('+')
-						})
-						this.$store.commit('handleMonitorList', list)
-						this.show = false
-					}).catch((res) => {
-						Toast.fail(res.data.msg)
-					})
-				}
+				this.sort_type = 'pub_time'
 			}else {
-				this.$emit('get-type', id)
 				this.sort_type = 'sim_index'
-				if(this.hotType == 'centerpage') {
-					this.$axios({
-						method: 'post',
-						url: '/index.php/Monitor/getESearch',
-						data: this.monitorQuery
-					}).then((res) => {
+			}
+			
+			if(this.hotType == 'centerpage') {
+				// 监测中心
+				this.$store.state.monitorQuery.sort_type = this.sort_type
+				this.$store.state.monitorQuery.page = 1
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Monitor/getESearch',
+					data: this.monitorQuery
+				}).then((res) => {
+					if(res.data.status == '1') {
 						let list = res.data.data.eventList
-						list.forEach((item, index) => {
-							item.wordStr = item.wordStr.split('+')
-						})
-						this.$store.commit('handleMonitorList', list)
-						this.show = false
-					}).catch((res) => {
+						if(list.length > 0) {
+							list.forEach((item, index) => {
+								item.wordStr = item.wordStr.split('+')
+							})
+							this.$store.commit('handleMonitorList', list)
+						}else {
+							this.$store.commit('handleMonitorList', [])
+						}
+					}else {
 						Toast.fail(res.data.msg)
-					})
-				}
+					}
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
+			}else {
+				// 城市舆情
+				this.$store.state.cityQuery.sort_type = this.sort_type
+				this.$store.state.cityQuery.page = 1
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/getESearch',
+					data: this.cityQuery
+				}).then((res) => {
+					if(res.data.status == '1') {
+						if(res.data.data.eventList.length > 0) {
+							let list = res.data.data.eventList
+							this.$store.commit('handleCityList', list)
+						}else {
+							this.$store.commit('handleCityList', [])
+						}
+					}else {
+						Toast.fail(res.data.msg)
+					}
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
 			}
 		},
 		onClickAddress() {

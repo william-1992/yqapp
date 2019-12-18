@@ -34,7 +34,6 @@
 					  placeholder="请输入搜索关键词"
 					  show-action
 					  shape="round"
-					  @search="onSearch"
 					>
 					  <div slot="action" @click="onSearch">搜索</div>
 					</van-search>
@@ -43,13 +42,10 @@
 				<div class="search-history">
 					<div class="title">
 						<h5>历史记录</h5>
-						<span>清空历史记录</span>
+						<span @click="onClearHistory">清空历史记录</span>
 					</div>
 					<ul>
-						<li><a href="#">国庆七天小长假</a></li>
-						<li><a href="#">西藏今年7月份开始下雪</a></li>
-						<li><a href="#">内蒙停止暴乱</a></li>
-						<li><a href="#">今年双十一天猫店铺销售量达到百亿</a></li>
+						<li v-for="item in historylist" @click="onItemClick(item)"><a href="#">{{ item }}</a></li>
 					</ul>
 				</div>
 
@@ -61,7 +57,7 @@
 
 <script>
 import { mapState } from 'vuex';
-import { Toast } from 'vant';
+import { Toast, Dialog } from 'vant';
 import CollList from './List';
 export default {
 	name: 'collection',
@@ -73,20 +69,69 @@ export default {
 			show: false,
 			value: '',
 			value1: 0,
+			historylist: [],
       option1: [
         { text: '标题', value: 0 }
       ]
 		}
 	},
 	computed: {
-		...mapState(['checkboxToggleColl'])
+		...mapState(['collQuery', 'checkboxToggleColl'])
 	},
 	watch: {
 		value(val) {
-			this.$store.state.collQuery.keyword = val
+			this.collQuery.keyword = val
 		}
 	},
+	mounted() {
+		this.getHistory()
+	},
 	methods: {
+		onItemClick(val) {
+			this.value = val
+			this.getColl()
+		},
+		getColl() {
+			this.$store.state.collQuery.page = 1
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Favo/getList',
+				data: this.collQuery
+			}).then((res) => {
+				if(res.data.data.length > 0) {
+					this.$store.commit('handleCollList', res.data.data)
+				}
+				setTimeout(() => {
+					this.show = false
+					this.value = ''
+				}, 500)
+				Toast.success(res.data.msg)
+			}).catch((res) => {
+				Toast.fail(res.data.msg)
+			})
+
+			if(this.historylist.length > 0) {
+				this.historylist.unshift(this.value)
+			}else {
+				this.historylist.push(this.value)
+			}
+			localStorage.setItem('history', JSON.stringify(this.historylist))
+		},
+		onClearHistory() {
+			Dialog.confirm({
+				message: '确定删除所有历史记录吗？'
+			}).then(() => {
+				localStorage.removeItem('history')
+				this.historylist = []
+			})
+		},
+		getHistory() {
+			let list = JSON.parse(localStorage.getItem('history'))
+
+			if(list && list.length > 0) {
+				this.historylist = list
+			}
+		},
 		onClickLeft() {
 			this.$store.commit('handleToolbar', true)
 			this.$store.commit('handleMesType', '')
@@ -98,17 +143,7 @@ export default {
 			this.show = false
 		},
 		onSearch() {
-			this.$axios({
-				method: 'post',
-				url: '/index.php/Favo/getList',
-				data: this.$store.state.collQuery
-			}).then((res) => {
-				this.$store.commit('handleCollList', res.data.data)
-				Toast.success(res.data.msg)
-			}).catch((res) => {
-				Toast.fail(res.data.msg)
-			})
-			this.show = false
+			this.getColl()
 		},
 		onSetup(type) {
 			if(type == '1') {

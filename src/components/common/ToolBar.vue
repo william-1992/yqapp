@@ -1,5 +1,15 @@
 <template>
 	<div class="tool-bar">
+		<!-- <van-tabbar
+		  v-model="active"
+		  active-color="#07c160"
+		  inactive-color="#000"
+		>
+		  <van-tabbar-item icon="home-o">标签</van-tabbar-item>
+		  <van-tabbar-item icon="search">标签</van-tabbar-item>
+		  <van-tabbar-item icon="freinds-o">标签</van-tabbar-item>
+		  <van-tabbar-item icon="setting-o">标签</van-tabbar-item>
+		</van-tabbar> -->
 		<van-tabbar v-model="active" active-color="#323948" inactive-color="#d3dbeb" @change="getItemName(active)">
 		  <van-tabbar-item v-for="(item, index) in list" :key="index">
 		  	<img slot="icon" slot-scope="props" :src="props.active ? item.checked : item.default">
@@ -40,24 +50,63 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['isComponent'])
+		...mapState(['isComponent', 'token'])
+	},
+	mounted() {
+		this.$nextTick(() => {
+			if(this.token) {
+				this.getItemName(this.active)
+			}
+		})
 	},
 	methods: {
 		getItemName(index) {
 			if(index === 0) {
-				this.componentName = 'center';
+				// this.componentName = 'center';
+				this.$router.push('/monitor')
 				this.$store.commit('handleHoneTabsName', '监测中心')
+				if(window.plus) {
+					this.plusReady()
+				}else {
+					document.addEventListener('plusready', this.plusReady, false)
+				}
 			}else if(index === 1) {
-				this.componentName = "message"
+				// this.componentName = "message"
+				this.$router.push('/message')
+				if(window.plus) {
+					this.plusReady()
+				}else {
+					document.addEventListener('plusready', this.plusReady, false)
+				}
 			}else if(index === 2) {
-				this.componentName = 'city';
+				// this.componentName = 'city';
+				this.$router.push('/city')
 				this.$store.commit('handleHoneTabsName', '城市舆情')
+				if(window.plus) {
+					this.plusReady()
+				}else {
+					document.addEventListener('plusready', this.plusReady, false)
+				}
 			}else if(index === 3) {
-				this.componentName = 'mine'
+				// this.componentName = 'mine'
+				this.$router.push('/mine')
+				if(window.plus) {
+					this.plusReady2()
+				}else {
+					document.addEventListener('plusready', this.plusReady2, false)
+				}
 			}
 			// this.$emit('onChangeBar', this.componentName)
 			this.$store.commit('handleComponent', this.componentName)
-		}
+		},
+		plusReady() {
+			plus.navigator.setStatusBarBackground('#ffffff');
+			plus.navigator.setStatusBarStyle('dark');
+		},
+		plusReady2() {
+			plus.navigator.setStatusBarBackground('#8091bb');
+			plus.navigator.setStatusBarStyle('light');
+		},
 	}
 };
 </script>

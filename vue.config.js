@@ -53,7 +53,7 @@ module.exports = {
 			app.post('/index.php/City/groupTree', function(req, res) {
 				res.json(dataGroup)
 			});
-			app.post('/index.php/City/showSource', function(req, res) {
+			app.post('/index.php/City/showSourceList', function(req, res) {
 				res.json(dataSource)
 			});
       app.post('/index.php/City/webcache', function(req, res) {

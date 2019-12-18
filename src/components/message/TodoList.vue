@@ -1,12 +1,15 @@
 <template>
 	<div class="list">
 
+		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+
 		<van-list 
 			v-model="loading" 
 			:error.sync="errored"
 			error-text="请求失败，点击重新加载"
 			:finished="finished" 
 			finished-text="没有更多了" 
+			:immediate-check="false"
 			@load="onLoad"
 		>
 
@@ -40,7 +43,7 @@
 							<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
 							<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.site_name }}</span>
+							<span>{{ item.site_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
 							首次收录： {{item.pretimeStr}}
@@ -87,6 +90,8 @@
 
 		</van-list>
 
+		</van-pull-refresh>
+
 		<van-popup 
 			v-model="showDetailToggle" 
 			closeable 
@@ -97,7 +102,7 @@
 		 	:overlay="false" 
 		 	:style="{ height: '100%', width: '100%' }"
 		 >
-			<detail :detailid="pushId" :eventid="eventId" :pageType="'message'" :fid="fidd"></detail>
+			<detail :detailid="pushId" :eventid="eventId" :pageType="'message'" :fid="fidd" @onFinished="finiseCallback"></detail>
 		</van-popup>
 
 		<van-popup 
@@ -121,7 +126,7 @@
 			position="right" 
 			:style="{ height: '100%', width: '100%' }"
 		>
-			<push-page :idlist="idList" :eventlist="eventidList" :pushid="pushId" :fid="fidd"></push-page>
+			<push-page :idlist="idList" :eventlist="eventidList" :pushid="pushId" :fid="fidd" @onCloseOne="closeHandle"></push-page>
 		</van-popup>
 
 		<!-- 完成点击弹框 -->
@@ -147,7 +152,7 @@
 
 <script>
 	import {
-		mapState
+		mapState, mapGetters
 	} from 'vuex';
 	import { Toast, Dialog } from 'vant';
 	import Detail from '@c/common/Detail';
@@ -169,6 +174,7 @@
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
+				isLoading: false,
 				finished: false,
 				errored: false,
 				allchecked: false,
@@ -182,12 +188,47 @@
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggle'])
+			...mapState(['checkboxToggle']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		mounted() {
 			this.getTodoList()
 		},
+		filters: {
+			nameLength(val) {
+				if(val.length > 10) {
+					return val.slice(0, 10) + '...'
+				}else {
+					return val
+				}
+			}
+		},
 		methods: {
+			finiseCallback(id) {
+				for(let i=0; i<this.newlist.length; i++) {
+					if(this.newlist[i].id == id) {
+						this.newlist.splice(i, 1)
+					}
+				}
+			},
+			onRefresh() {
+				setTimeout(() => {
+					this.newlist = []
+					this.$toast('刷新成功');
+        	this.getTodoList()
+        	this.page = 0
+				}, 500)
+			},
+			closeHandle(id) {
+				if(id) {
+					for(let i=0; i<this.newlist.length; i++) {
+						if(this.newlist[i].id == this.pushId) {
+							this.newlist.splice(i, 1)
+						}
+					}
+				}
+				this.pushToggle = false
+			},
 			onClickOneStore(id, eid, fidd) {
 				this.fidd = fidd
 				Dialog.confirm({
@@ -197,8 +238,9 @@
 						method: 'post',
 						url: '/index.php/City/favorite',
 						data: {
-							uid: this.$store.state.userid,
-							main_id: id,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
+							main_id: eid,
 							event_id: eid
 						}
 					}).then((res) => {
@@ -217,12 +259,18 @@
 						url: '/index.php/Push/finish',
 						data: {
 							fid: this.fidd,
-							uid: this.$store.state.userid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							event_push_id: this.pushId,
 							remark: this.message
 						}
 					}).then((res) => {
 						Toast.success(res.data.msg)
+						for(let i=0; i<this.newlist.length; i++) {
+							if(this.newlist[i].id == this.pushId) {
+								this.newlist.splice(i, 1)
+							}
+						}
 					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
@@ -247,7 +295,8 @@
 					method: 'post',
 					url: '/index.php/Push/getTodoList',
 					data: {
-						uid: this.$store.state.userid,
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
 						up_time: timetype
 					}
 				}).then((res) => {
@@ -262,6 +311,7 @@
 						this.finished = true;
 					}
 					this.loading = false
+					this.isLoading = false
 				}).catch((res) => {
 					this.loading = false
 					this.errored = true
@@ -411,7 +461,7 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 30% 60%;
+						background-size: 11px 16px;
 					}
 
 					h2 {

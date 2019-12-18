@@ -53,6 +53,9 @@
 			<van-field v-model="message" type="textarea" placeholder="请输入留言" rows="1" autosize :maxlength="50" clearable />
 			<p>{{this.message.length}} / 50</p>
 		</section> -->
+
+		<van-overlay :show="layshow" @click="layshow = false" />
+
 	</div>
 </template>
 
@@ -60,6 +63,7 @@
 	import {
 		Toast
 	} from 'vant';
+	import { mapGetters } from 'vuex';
 	export default {
 		name: 'push-page-two',
 		props: {
@@ -82,6 +86,7 @@
 		},
 		data() {
 			return {
+				layshow: false,
 				sendradio: '2',
 				checked: false,
 				message: '',
@@ -103,6 +108,9 @@
 		mounted() {
 			this.getPeople()
 		},
+		computed: {
+			...mapGetters(['getUserid', 'getSubid'])
+		},
 		methods: {
 			onClickCheckbox() {
 				if (!this.checked) {
@@ -115,9 +123,23 @@
 				}
 			},
 			onClickPush() {
+				if (this.result.length > 0) {
+					// 判断storeType为true时走收藏页推送，为false时走转发和其它推送接口
+					if(this.storeType) {
+						// 收藏推送
+						this.pushToNew()
+					}else {
+						// 其它推送
+						this.pushOther()
+					}
+				} else {
+					Toast('未選擇推送人員')
+				}
+			},
+			pushOther() {
+				let receiveList = []
 				let arr1 = []
 				let arr2 = []
-				let arr3 = []
 				for(let i=0; i<this.idlist.length; i++) {
 					if(arr1.indexOf(this.idlist[i]) == -1) {
 						arr1.push(this.idlist[i])
@@ -126,60 +148,121 @@
 						arr2.push(this.eventlist[i])
 					}
 				}
-				if (this.result.length > 0) {
-					let receiveList = []
-					for (let i = 0; i < this.childlist.length; i++) {
-						for (let j = 0; j < this.result.length; j++) {
-							if (this.result[j] == this.childlist[i].name) {
-								receiveList.push(this.childlist[i].id)
-							}
+				for (let i = 0; i < this.childlist.length; i++) {
+					for (let j = 0; j < this.result.length; j++) {
+						if (this.result[j] == this.childlist[i].name) {
+							receiveList.push(this.childlist[i].id)
 						}
 					}
-					if(this.storeType) {
-						for(let i=0; i<this.fidlist.length; i++) {
-							if(arr3.indexOf(this.fidlist[i]) == -1) {
-								arr3.push(this.fidlist[i])
-							}
-						}
-						this.$axios({
-							method: 'post',
-							url: '/index.php/City/pushNews',
-							data: {
-								fid: arr3,
-								uid: this.$store.state.userid,
-								idlist: arr1,
-								event_idlist: arr2,
-								receive_idlist: receiveList,
-								push_styles_idList: this.sendradio,
-								content: this.message
-							}
-						}).then((res) => {
-							Toast.success(res.data.msg);
-						}).catch((res) => {
-							Toast.fail(res.data.msg);
-						})
-					}else {
-						this.$axios({
-							method: 'post',
-							url: '/index.php/City/pushNews',
-							data: {
-								fid: this.fid,
-								uid: this.$store.state.userid,
-								idlist: arr1,
-								event_idlist: arr2,
-								receive_idlist: receiveList,
-								push_styles_idList: this.sendradio,
-								content: this.message
-							}
-						}).then((res) => {
-							Toast.success(res.data.msg);
-						}).catch((res) => {
-							Toast.fail(res.data.msg);
-						})
-					}
-				} else {
-					Toast('未選擇推送人員')
 				}
+				this.layshow = true
+				Toast.loading({
+					message: '推送中...',
+					forbidClick: true,
+					duration: 0
+				})
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/pushNews',
+					data: {
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
+
+						fid: this.fid,
+						idlist: arr1,
+						event_idlist: arr2,
+						receive_idlist: receiveList,
+						push_styles_idlist: this.sendradio,
+						content: this.message
+					}
+				}).then((res) => {
+					if(res.data.status == '1') {
+						this.layshow = false
+						Toast.success(res.data.msg);
+						this.$emit('onCloseTwo')
+					}else {
+						setTimeout(() => {
+							this.layshow = false
+							this.$emit('onCloseTwo')
+						}, 800)
+						Toast.fail({
+							message: res.data.msg,
+							duration: 800
+						})
+					}
+				}).catch((res) => {
+					setTimeout(() => {
+						this.layshow = false
+					}, 800)
+					Toast.fail({
+						message: res.data.msg,
+						duration: 800
+					})
+				})
+			},
+			pushToNew() {
+				let receiveList = []
+				let arr1 = []
+				let arr2 = []
+				for(let i=0; i<this.idlist.length; i++) {
+					if(arr1.indexOf(this.idlist[i]) == -1) {
+						arr1.push(this.idlist[i])
+					}
+					if(arr2.indexOf(this.eventlist[i]) == -1) {
+						arr2.push(this.eventlist[i])
+					}
+				}
+				for (let i = 0; i < this.childlist.length; i++) {
+					for (let j = 0; j < this.result.length; j++) {
+						if (this.result[j] == this.childlist[i].name) {
+							receiveList.push(this.childlist[i].id)
+						}
+					}
+				}
+				this.layshow = true
+				Toast.loading({
+					message: '推送中...',
+					forbidClick: true,
+					duration: 0
+				})
+				this.$axios({
+					method: 'post',
+					url: '/index.php/City/pushNews',
+					data: {
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
+
+						fid: this.fidlist,
+						idlist: this.idlist,
+						event_idlist: this.eventlist,
+						receive_idlist: receiveList,
+						push_styles_idlist: this.sendradio,
+						content: this.message
+					}
+				}).then((res) => {
+					if(res.data.status == '1') {
+						this.layshow = false
+						Toast.success(res.data.msg);
+						this.$emit('onCloseTwo')
+					}else {
+						setTimeout(() => {
+							this.layshow = false
+							this.$emit('onCloseTwo')
+						}, 800)
+						Toast.fail({
+							message: res.data.msg,
+							duration: 800
+						})
+					}
+				}).catch((res) => {
+					setTimeout(() => {
+						this.layshow = false
+					}, 800)
+					Toast.fail({
+						message: res.data.msg,
+						duration: 800
+					})
+				})
 			},
 			onClickDelete(index) {
 				this.result.splice(index, 1)
@@ -189,7 +272,8 @@
 					method: 'post',
 					url: '/index.php/City/groupTree',
 					data: {
-						uid: this.$store.state.userid
+						uid: this.getUserid,
+						sub_uid: this.getSubid
 					}
 				}).then((res) => {
 					this.namelist = res.data.data.groupTree

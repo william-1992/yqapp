@@ -1,6 +1,8 @@
 <template>
 	<div class="list">
 
+		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+
 		<van-list 
 			v-model="loading" 
 			:error-sync="errored"
@@ -40,7 +42,7 @@
 							<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
 							<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.site_name }}</span>
+							<span>{{ item.site_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
 							首次收录： {{item.pretimeStr}}
@@ -83,6 +85,7 @@
 										<h6>{{ ite.from_nickname }}转发给{{ ite.to_nickname }}</h6>
 										<p>留言：{{ ite.remark }}</p>
 									</div>
+									<van-button @click="onClickRemind(ite.id)">催一下</van-button>
 								</li>
 							</ul>
 							<div>
@@ -108,6 +111,8 @@
 
 		</van-list>
 
+		</van-pull-refresh>
+
 		<van-popup 
 			v-model="showDetailToggle" 
 			closeable 
@@ -132,12 +137,30 @@
 			<event-list :eventType="'message'" :fid="fidd" :eid="eventId" :aid="pushId"></event-list>
 		</van-popup>
 
+		<!-- 完成点击弹框 -->
+		<van-dialog
+			v-model="remindToggle"
+			title="添加留言"
+			show-cancel-button
+			get-container='body'
+			@confirm="onClickConfirm"
+		>
+			<van-field
+				v-model="message"
+				rows="3"
+				autosize
+				type="textarea"
+				placeholder="请输入留言"
+				show-word-limit
+			></van-field>
+		</van-dialog>
+
 	</div>
 </template>
 
 <script>
-	import { mapState } from 'vuex';
-	import { Dialog } from 'vant';
+	import { mapState, mapGetters } from 'vuex';
+	import { Dialog, Toast } from 'vant';
 	import Detail from '@c/common/Detail';
 	import EventList from '@c/common/EventList';
 	export default {
@@ -148,10 +171,14 @@
 		},
 		data() {
 			return {
+				logId: '',
+				message: '',
+				remindToggle: false,
 				launchToggle: true,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
+				isLoading: false,
 				finished: false,
 				errored: false,
 				allchecked: false,
@@ -163,7 +190,8 @@
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggle'])
+			...mapState(['checkboxToggle']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		mounted() {
 			this.getPushList()
@@ -177,9 +205,47 @@
 			datefil(data) {
 				let str = data.split(' ')[1]
 				return str.substring(0,5)
+			},
+			nameLength(val) {
+				if(val.length > 10) {
+					return val.slice(0, 10) + '...'
+				}else {
+					return val
+				}
 			}
 		},
 		methods: {
+			onRefresh() {
+				setTimeout(() => {
+					this.newlist = []
+					this.$toast('刷新成功');
+        	this.getPushList()
+        	this.page = 0
+				}, 500)
+			},
+			onClickConfirm() {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Push/remind',
+					data: {
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
+
+						log_id: this.logId,
+						remark: this.message
+					}
+				}).then((res) => {
+					if(res.data.status == '1') {
+						Toast.success(res.data.msg)
+					}else {
+						Toast.fail(res.data.msg)
+					}
+				})
+			},
+			onClickRemind(id) {
+				this.logId = id
+				this.remindToggle = true
+			},
 			onClickOneStore(id, eid, fidd) {
 				this.fidd = fidd
 				Dialog.confirm({
@@ -189,20 +255,17 @@
 						method: 'post',
 						url: '/index.php/City/favorite',
 						data: {
-							uid: this.$store.state.userid,
-							main_id: id,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
+							main_id: eid,
 							event_id: eid
 						}
 					}).then((res) => {
 						Toast.success(res.data.msg)
-
-					}).then((res) => {
+					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
-				}).catch(() => {
-
 				})
-				
 			},
 			getPushList() {
 				let overtype = 0
@@ -215,7 +278,8 @@
 					method: 'post',
 					url: '/index.php/Push/getMyPushList',
 					data: {
-						uid: this.$store.state.userid,
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
 						is_over: overtype,
 						up_time: timetype
 					}
@@ -231,6 +295,7 @@
 						this.finished = true
 					}
 					this.loading = false
+					this.isLoading = false
 				}).catch((res) => {
 					this.loading = false
 					this.errored = true
@@ -383,7 +448,7 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 30% 60%;
+						background-size: 11px 16px;
 					}
 
 					h2 {
@@ -535,6 +600,19 @@
 					background-color: $bgColor;
 					display: flex;
 
+					&:last-child {
+						.van-button {
+							display: block;
+						}
+					}
+
+					.van-button {
+						display: none;
+						background: none;
+						border: none;
+						color: #ff6651;
+					}
+
 					.launch-time {
 						padding-bottom: px2rem(15);
 						width: px2rem(48);
@@ -572,7 +650,7 @@
 
 					.launch-des {
 						padding-left: px2rem(10);
-
+						flex: 1;
 						h6 {
 							display: flex;
 							justify-content: space-between;

@@ -1,38 +1,27 @@
 <template>
 	<div class="list">
 
-
-
-		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
-
 		<van-list 
-			class="list-inner"
 			v-model="loading" 
+			:finished="finished" 
 			:error.sync="errored" 
 			error-text="请求失败，点击重新加载" 
-			:finished="finished" 
 			finished-text="没有更多了" 
-			:immediate-check="false"
 			@load="onLoad"
 		>
 
-			<van-swipe-cell v-for="item in cityEventList" :key="item.id">
+			<van-swipe-cell v-for="item in collEventList" :key="item.id">
+
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
 					<div class="title">
 						<div class="left">
-							<van-checkbox 
-								v-show="checkboxToggleCity" 
-								v-model="item.checked" 
-								:key="item.id" 
-								:name="item.id" 
-								checked-color="#ff6651"
-							 	@click.stop="onClickRadio(item.id)"
-							 ></van-checkbox>
-							<div class="rect zheng" v-if="item.isnegative == '2'">正</div>
-							<div class="rect fu" v-else-if="item.isnegative == '1'">负</div>
+							<van-checkbox v-show="checkboxToggleColl" v-model="item.checked" :key="item.id" :name="item.id" checked-color="#ff6651"
+							 @click.stop="onClickRadio(item.id)"></van-checkbox>
+							<div class="rect zheng" v-if="item.point == '2'">正</div>
+							<div class="rect fu" v-else-if="item.point == '1'">负</div>
 							<div class="rect zhong" v-else>中</div>
-							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.areaid)">{{ item.docount }}</div>
+							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.id, item.fid || 0)">{{ item.docount }}</div>
 						</div>
 						<div class="right">
 							{{item.preTimeStr}}前更新
@@ -48,63 +37,83 @@
 							<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
 
-							<span>{{ item.site_name | nameLength }}</span>
+							<span>{{ item.site_name }}</span>
 						</div>
 						<div class="timer-right">
 							首次收录： {{item.addtimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.event_id, item.areaid, item.id)">
+					<div class="desc" @click="openDetail(item.event_id, item.id, item.fid || 0)">
 						<p>{{item.light | textLength}}</p>
+					</div>
+					<div class="tags">
+						<h5>监控词组：</h5>
+						<p>
+							<span v-for="(val, index) in item.ewords" :key="index">{{ val }}</span>
+						</p>
 					</div>
 				</div>
 				<!-- </van-cell> -->
 				<template slot="right">
-					<van-button type="default"  @click="onClickOnePush(item.id, item.event_id, item.event_url)">
+					<van-button type="default"  @click="onClickOnePush(item.id, item.event_id, item.fid || 0, item.url)">
 						<i class="iconfont">&#xe623;</i>
 						<span>推送</span>
 					</van-button>
-					<van-button type="default" @click="onClickOneStore(item.id, item.event_id)">
+					<van-button type="default" @click="onClickOneStore(item.event_id)">
 						<i class="iconfont">&#xe6e7;</i>
-						<span>收藏</span>
+						<span>取消收藏</span>
 					</van-button>
 				</template>
 			</van-swipe-cell>
 
 		</van-list>
 
-		</van-pull-refresh>
-
-
-
-
-		<div class="allSelect" v-show="checkboxToggleCity">
+		<div class="allSelect" v-show="checkboxToggleColl">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
 			<div class="btn-wrap">
-				<!-- <van-button color="#6f7ea0" plain size="small">删除</van-button> -->
+				<van-button color="#6f7ea0" plain size="small" @click="onClickCancle">取消收藏</van-button>
 				<van-button color="#6f7ea0" size="small" @click="onClickPush">推送</van-button>
 			</div>
 		</div>
 
-		<!-- 详情页 -->
-		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
-		 :overlay="false" :style="{ height: '100%', width: '100%' }">
-			<detail :detailid="detail_id" :eventid="event_id" :deletebtn="false" :pageType="'city'"></detail>
+		<van-popup 
+			v-model="showDetailToggle" 
+			closeable 
+			close-icon="arrow-left" 
+			close-icon-position="top-left" 
+			get-container="body"
+			position="right"
+		 	:overlay="false" 
+		 	:get-container="collection" 
+		 	:style="{ height: '100%', width: '100%' }"
+		 >
+			<detail :eventid="eventId" :detailid="detailId" :pageType="'coll'" @backHandle="detailClose" :fid="fidd"></detail>
 		</van-popup>
 
-		<!-- 相似事件 -->
-		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list :eid="event_id" :aid="area_id"></event-list>
+		<van-popup 
+			v-model="showLinkEventToggle" 
+			position="bottom" 
+			:style="{ height: '80%' }" 
+			get-container="body"
+			closeable 
+			close-icon-position="top-left"
+		>
+			<event-list :eventType="'favo'" :fid="fidd" :eid="eventId" :aid="detailId"></event-list>
 		</van-popup>
 
-		<!-- 去推送 -->
-		<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
+		<van-popup
+			v-model="pushToggle"
+			position="bottom"
+			get-container="body"
+			:style="{ height: '23%' }"
+		>
 			<push-to 
-				@closeThis="closePush" 
-				:idlist="idList" 
-				:eventlist="eventidList" 
-				:linktoggle="linkToggle" 
-				:linkurl="detail_url"
+				:fidlist="[...fidlist]" 
+				:eventlist="[...eventlist]" 
+				:idlist="[...idlist]" 
+				:linkurl="detailUrl" 
+				:linktoggle="linkToggle"
+				@closeThis="closePush"
 			></push-to>
 		</van-popup>
 
@@ -112,23 +121,22 @@
 </template>
 
 <script>
-	import { mapState, mapGetters } from 'vuex';
 	import { Toast, Dialog } from 'vant';
+	import {
+		mapState, mapGetters
+	} from 'vuex';
 	import Detail from '@c/common/Detail';
 	import EventList from '@c/common/EventList';
-	import PushTo from '@c/common/PushTo';
+	import PushTo from '@c/mine/PushTo';
 	export default {
-		name: 'city-list',
+		name: 'store-list',
 		components: {
 			Detail,
 			EventList,
 			PushTo
 		},
-		props: ['cityhot'],
 		data() {
 			return {
-				isLoading: false,
-				detail_url: '',
 				linkToggle: false,
 				pushToggle: false,
 				showLinkEventToggle: false,
@@ -138,50 +146,39 @@
 				errored: false,
 				allchecked: false,
 				newlist: [],
-				event_id: '',
-				area_id: '',
-				detail_id: '',
-				idList: [],
-				eventidList: [],
 				page: 0,
-				sort_type: ''
+				fidd: '',
+				eventId: '',
+				detailId: '',
+				detailUrl: '',
+				eventlist: [],
+				idlist: [],
+				fidlist: []
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggleCity', 'cityEventList', 'cityQuery']),
+			...mapState(['checkboxToggleColl', 'collEventList', 'collQuery']),
 			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
-			cityEventList(data) {
-				// if(data.length <= 3) {
-				// 	this.loading = true
-				// 	this.getCityData()
-				// }
-			},
-			newlist(data) {
-				// console.log('123')
-			},
-			cityhot(val) {
-				if (val == '1') {
-					this.sort_type = ''
-				} else {
-					this.sort_type = 'sim_index'
-				}
-				// this.getCityData(this.sort_type)
-			},
-			allchecked(val) {
-				if (val) {
-					this.cityEventList.forEach((item) => {
-						item.checked = true
-					})
-				} else {
-					this.cityEventList.forEach((item) => {
-						item.checked = false
-					})
+			collEventList(data) {
+				if(data.length < 10) {
+					this.finished = true
 				}
 			},
 			page(val) {
-				// this.cityQuery.page = val
+				// this.collQuery.page = val
+			},
+			allchecked(val) {
+				if (val) {
+					this.collEventList.forEach((item) => {
+						item.checked = true
+					})
+				} else {
+					this.collEventList.forEach((item) => {
+						item.checked = false
+					})
+				}
 			}
 		},
 		filters: {
@@ -191,132 +188,162 @@
 				}else {
 					return val
 				}
-			},
-			nameLength(val) {
-				if(val.length > 10) {
-					return val.slice(0, 10) + '...'
-				}else {
-					return val
-				}
 			}
 		},
 		mounted() {
-			this.getCityData()
+			this.getList()
 		},
 		methods: {
-			onRefresh() {
-				setTimeout(() => {
-					this.$store.commit('handleCityList', [])
-					this.$toast('刷新成功');
-        	this.getCityData()
-        	this.$store.state.cityQuery.page = 0
-				}, 500)
+			closePush() {
+				this.pushToggle = false
 			},
-			onClickOneStore(id, eid) {
+			onClickOnePush(id, eid, fid, url) {
+				this.idlist = []
+				this.eventlist = []
+				this.fidlist = []
+
+				this.linkToggle = true
+				this.detailId = id
+				this.eventId = eid
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidlist.push(fid)
+				// this.fidd = fid
+				this.detailUrl = url
+				this.pushToggle = true
+			},
+			onClickOneStore(id) {
 				Dialog.confirm({
-					message: '收藏此条信息？'
+					message: '确定取消收藏该条信息？'
 				}).then(() => {
 					this.$axios({
 						method: 'post',
-						url: '/index.php/City/favorite',
+						url: '/index.php/Favo/doDel',
 						data: {
 							uid: this.getUserid,
 							sub_uid: this.getSubid,
-							main_id: id,
-							event_id: eid
+							main_id: id
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-					}).then((res) => {
+						if(res.data.status == '1') {
+							for(let i=0; i<this.collEventList.length; i++) {
+								if(this.collEventList[i].checked) {
+									this.collEventList.splice(i, 1)
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
 				})
 			},
-			onClickOnePush(id, eid, url) {
-				this.detail_url = url
-				this.linkToggle = true
-				for(let i=0; i<this.cityEventList.length; i++) {
-					if(this.cityEventList[i].id == id) {
-						this.cityEventList[i].checked = true
+			detailClose(data) {
+				console.log(data)
+				this.showDetailToggle = false
+			},
+			getList() {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Favo/getList',
+					data: this.collQuery
+				}).then((res) => {
+					if(res.data.status == '1') {
+						if(res.data.data.length > 0) {
+							this.$store.commit('handleCollList', this.collEventList.concat(res.data.data))
+							this.$store.state.collQuery.page = this.$store.state.collQuery.page + 1
+						}else {
+							this.finished = true;
+						}
+						this.loading = false
 					}else {
-						this.cityEventList[i].checked = false
+						this.loading = false
+						this.errored = true
+					}
+				})
+			},
+			onClickRadio(id) {
+				console.log(id)
+			},
+			onLoad() {
+				setTimeout(() => {
+
+					this.getList()
+					// 加载状态结束
+					// this.loading = false;
+
+					// 数据全部加载完成
+					
+				}, 2000);
+			},
+			openDetail(eid, id, fid) {
+				this.eventId = eid
+				this.detailId = id
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidd = fid
+				this.showDetailToggle = true
+			},
+			onLinkEvent(eid, id, fid) {
+				this.eventId = eid
+				this.detailId = id
+				this.idlist.push(id)
+				this.eventlist.push(eid)
+				this.fidd = fid
+				this.showLinkEventToggle = true
+			},
+			collection() {
+				return document.querySelector('.collection')
+			},
+			onClickPush() {
+				this.linkToggle = false
+				this.idlist = []
+				this.eventlist = []
+				this.fidlist = []
+				for (let i = 0; i < this.collEventList.length; i++) {
+					if (this.collEventList[i].checked) {
+						this.idlist.push(this.collEventList[i].id)
+						this.eventlist.push(this.collEventList[i].event_id)
+						this.fidlist.push(this.collEventList[i].fid || '-1')
 					}
 				}
-				this.idList = []
-				this.eventidList = []
-				for (let i = 0; i < this.cityEventList.length; i++) {
-					if (this.cityEventList[i].checked) {
-						this.idList.push(this.cityEventList[i].id)
-						this.eventidList.push(this.cityEventList[i].event_id)
-					}
-				}
-				if (this.idList.length > 0) {
+				if (this.idlist.length > 0) {
 					this.pushToggle = true
 				} else {
 					Toast('你还没有选择事件哦')
 				}
 			},
-			getCityData(type) {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/getESearch',
-					data: this.cityQuery
-				}).then((res) => {
-					if(res.data.data.eventList.length > 0) {
-						let list = this.cityEventList.concat(res.data.data.eventList)
-						// this.newlist = this.newlist.concat(res.data.data.eventList)
-						this.$store.commit('handleCityList', list)
-						// this.page++
-						this.$store.state.cityQuery.page = this.$store.state.cityQuery.page + 1
-					}else {
-						this.$store.commit('handleCityList', [])
-						this.finished = true;
-					}
-					this.loading = false
-					this.isLoading = false
-				}).catch(() => {
-					this.loading = false
-					this.errored = true
-				})
-			},
-			onClickRadio(id) {
-				console.log(id)
-				
-			},
-			onLoad() {
-				// 异步更新数据
-				setTimeout(() => {
-					this.getCityData()
-				}, 2000);
-			},
-			openDetail(eid, aid, id) {
-				this.showDetailToggle = true
-				this.event_id = eid
-				this.area_id = aid
-				this.detail_id = id
-				// this.idList = Array.from(new Set(this.idList.push(id)))
-				// this.eventidList.push(eid)
-			},
-			onLinkEvent(eid, aid) {
-				this.showLinkEventToggle = true
-				this.event_id = eid
-				this.area_id = aid
-			},
-			closePush() {
-				this.pushToggle = false
-			},
-			onClickPush() {
-				this.linkToggle = false
-				this.idList = []
-				this.eventidList = []
-				for (let i = 0; i < this.cityEventList.length; i++) {
-					if (this.cityEventList[i].checked) {
-						this.idList.push(this.cityEventList[i].id)
-						this.eventidList.push(this.cityEventList[i].event_id)
+			onClickCancle() {
+				let arr = []
+				for (let i = 0; i < this.newlist.length; i++) {
+					if (this.newlist[i].checked) {
+						arr.push(this.newlist[i].id)
 					}
 				}
-				if (this.idList.length > 0) {
-					this.pushToggle = true
+				if (arr.length > 0) {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
+							main_id: arr
+						}
+					}).then((res) => {
+						if(res.data.status == 1) {
+							for(let i=0; i<this.newlist.length; i++) {
+								if(this.newlist[i].checked) {
+									this.newlist.splice(i, 1)
+								}
+							}
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail(res.data.msg)
+					})
 				} else {
 					Toast('你还没有选择事件哦')
 				}
@@ -329,14 +356,15 @@
 	@import '@css/constants.scss';
 
 	.list {
-		padding-bottom: px2rem(20);
-		font-size: 15px;
-		position: absolute;
-		top: px2rem(90);
+		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: px2rem(25);
+		bottom: 0;
+		top: 1rem;
 		overflow: auto;
+		padding-bottom: px2rem(50);
+		font-size: 15px;
+
 		.van-popup {
 			overflow: hidden;
 		}
@@ -345,7 +373,7 @@
 			position: fixed;
 			left: 0;
 			right: 0;
-			bottom: 50px;
+			bottom: 0;
 			background-color: #fff;
 			display: flex;
 			justify-content: space-between;
@@ -390,7 +418,7 @@
 		}
 
 		.li-wrap {
-			padding: px2rem(20) px2rem(8) px2rem(10);
+			padding: px2rem(20) px2rem(8) px2rem(5);
 			background-color: #fff;
 			margin-bottom: px2rem(10);
 
@@ -414,7 +442,13 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 11px 16px;
+						background-size: 13px 19px;
+					}
+
+					h2 {
+						margin-left: .1rem;
+						font-size: px2rem(18);
+						line-height: px2rem(24);
 					}
 				}
 
@@ -427,14 +461,6 @@
 					color: #fff;
 					text-align: center;
 					background-color: $rectBg1;
-				}
-
-				.zhong {
-					background-color: $rectBg2;
-				}
-
-				.fu {
-					background-color: $rectBg3;
 				}
 
 				.right {
@@ -457,7 +483,6 @@
 					i {
 						margin-right: px2rem(10);
 					}
-
 					img {
 						margin-right: px2rem(5);
 						width: px2rem(18);

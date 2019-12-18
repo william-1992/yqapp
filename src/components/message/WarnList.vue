@@ -1,12 +1,15 @@
 <template>
 	<div class="list">
 
+		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+
 		<van-list 
 			v-model="loading" 
 			:finished="finished" 
 			:error.sync="errored"
 			error-text="请求失败，点击重新加载"
 			finished-text="没有更多了" 
+			:immediate-check="false"
 			@load="onLoad"
 		>
 
@@ -40,7 +43,7 @@
 							<img v-else-if="item.show_icon_type == 5" src="../../assets/images/newicon08.png" />
 							<img v-else-if="item.show_icon_type == 7" src="../../assets/images/newicon06.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.show_name }}</span>
+							<span>{{ item.show_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
 							首次收录： {{item.pubtimeStr}}
@@ -70,8 +73,18 @@
 
 		</van-list>
 
-		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
-		 :overlay="false" :style="{ height: '100%', width: '100%' }">
+		</van-pull-refresh>
+
+		<van-popup 
+			v-model="showDetailToggle" 
+			closeable 
+			close-icon="arrow-left" 
+			close-icon-position="top-left" 
+			get-container="body"
+			position="right"
+		 	:overlay="false" 
+		 	:style="{ height: '100%', width: '100%' }"
+		 >
 			<detail :deletebtn="false" :detailid="detailId" :eventid="eventId" :fid="fidd" ></detail>
 		</van-popup>
 
@@ -96,9 +109,9 @@
 
 <script>
 	import {
-		mapState
+		mapState, mapGetters
 	} from 'vuex';
-	import { Dialog } from 'vant';
+	import { Dialog, Toast } from 'vant';
 	import Detail from '@c/common/Detail';
 	import EventList from '@c/common/EventList';
 	import PushTo from '@c/common/PushTo';
@@ -117,13 +130,14 @@
 				detailId: '',
 				eventId: '',
 				fidd: '',
-				linkurl: '',
+				linkUrl: '',
 				linkToggle: true,
 				pushToggle: false,
 				launchToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
+				isLoading: false,
 				finished: false,
 				errored: false,
 				allchecked: false,
@@ -131,13 +145,13 @@
 			}
 		},
 		computed: {
-			...mapState(['warnQuery', 'warnEventList'])
+			...mapState(['warnQuery', 'warnEventList']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
 			warnEventList(data) {
-				if(data.length <= 3) {
-					this.getList()
-					this.loading = true
+				if(data.length == 0) {
+					this.finished = true
 				}
 			},
 			allchecked(val) {
@@ -152,12 +166,35 @@
 				}
 			}
 		},
+		filters: {
+			nameLength(val) {
+				if(val.length > 10) {
+					return val.slice(0, 10) + '...'
+				}else {
+					return val
+				}
+			}
+		},
 		mounted() {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.$nextTick(() => {
-					this.getList()
+				this.getList()
 			})
 		},
 		methods: {
+			onRefresh() {
+				setTimeout(() => {
+					this.$store.commit('handleWarnList', [])
+					this.$toast('刷新成功');
+        	this.getList()
+        	this.$store.state.warnQuery.page = 0
+				}, 500)
+			},
 			onClickOneStore(id, eid, fid) {
 				Dialog.confirm({
 					message: '收藏此条信息？'
@@ -167,8 +204,9 @@
 						url: '/index.php/City/favorite',
 						data: {
 							fid: fid,
-							uid: this.$store.state.userid,
-							main_id: id,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
+							main_id: eid,
 							event_id: eid
 						}
 					}).then((res) => {
@@ -203,10 +241,15 @@
 							item.words = item.words.split('+')
 						})
 						this.$store.commit('handleWarnList', this.warnEventList.concat(list))
+
+						this.$store.state.warnQuery.page = this.$store.state.warnQuery.page + 1
 					}else {
+						this.$store.commit('handleWarnList', [])
 						this.finished = true
 					}
 					this.loading = false
+					this.isLoading = false
+					Toast.clear()
 				}).catch((res) => {
 					this.loading = false
 					this.errored = true
@@ -356,7 +399,7 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 30% 60%;
+						background-size: 11px 16px;
 					}
 
 					h2 {

@@ -1,73 +1,64 @@
 <template>
-	<div class="detail" :style="{ paddingTop: paddingTT + 'px' }" v-if="info.info">
+	<div class="detail">
 
-		<header>
-			<h3>新闻详情</h3>
-			<span class="iconfont" @click="onClickFont">&#xe646;</span>
-		</header>
+		<van-popup 
+			v-model="defaultshow"
+			:style="{ height: '100%', width: '100%' }"
+			closeable 
+			close-icon-position="top-left"
+			position="right"
+			@close="onClose"
+		>
 
-		<div class="wrapper" ref="wrapper">
-		<section>
-			<h2>{{ info.info.title.slice(0, 35) + '...' }}</h2>
-			<hgroup>
-				<span>{{ info.info.pubtimeStr }}</span>
-				<p v-if="info.info.site_name">
-					来源:
-					<a :href="info.info.url" target="_blank">{{ info.info.site_name }}</a>
-				</p>
-			</hgroup>
-			<div class="des" :style="{ fontSize: fontValue + 'px' }" v-html="info.cache_text"></div>
-		</section>
-		</div>
+			<header>
+				<h3>新闻详情</h3>
+				<span class="iconfont" @click="onClickFont">&#xe646;</span>
+			</header>
 
-		<div class="features" v-if="this.pageType == 'message'">
-			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
-			  <van-tabbar-item @click="onClick(0)"><i class="iconfont">&#xe61b;</i><span>转发</span></van-tabbar-item>
-			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
-			  <van-tabbar-item @click="onClick(2)"><i class="iconfont confrim-btn">&#xe639;</i><span>完成</span></van-tabbar-item>
-			</van-tabbar>
-		</div>
-		<div class="features" v-else-if="this.pageType == 'juststore'">
-			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
-			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
-			</van-tabbar>
-		</div>
-		<div class="features" v-else-if="this.pageType == 'coll'">
-			<van-tabbar v-model="mesactive" active-color='#4e5a78'>
-			  <van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
-			  <van-tabbar-item @click="onClickdodel"><i class="iconfont">&#xe73a;</i><span>取消收藏</span></van-tabbar-item>
-			</van-tabbar>
-		</div>
-		<div class="features" v-else>
-			<van-tabbar v-model="active" active-color='#4e5a78'>
-			  <van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
-			  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
-			  <van-tabbar-item v-if="deletebtn" @click="onChange(2)"><i class="iconfont">&#xe66c;</i><span>删除</span></van-tabbar-item>
-			</van-tabbar>
-		</div>
+			<div class="wrapper" ref="wrapper">
+			<section>
+				<h2>{{ info.info.title.slice(0, 35) + '...' }}</h2>
+				<hgroup>
+					<span>{{ info.info.pubtimeStr }}</span>
+					<p v-if="info.info.site_name">
+						来源:
+						<a :href="info.info.url" target="_blank">{{ info.info.site_name }}</a>
+					</p>
+				</hgroup>
+				<div class="des" :style="{ fontSize: fontValue + 'px' }" v-html="info.cache_text"></div>
+			</section>
+			</div>
 
-		<div class="de-step" v-show="fontToggle">
-			<span class="min-step">16</span>
-			<van-slider v-model="fontValue" active-color="#ff6651" bar-height="4px" :max="28" :min="16">
-			  <div slot="button" class="custom-button">
-			    {{ fontValue }}
-			  </div>
-			</van-slider>
-			<span class="max-step">28</span>
-		</div>
+			<div class="features">
+				<van-tabbar v-model="mesactive" active-color='#4e5a78'>
+					<van-tabbar-item @click="onChange(0)"><i class="iconfont">&#xe61b;</i><span>推送</span></van-tabbar-item>
+				  <van-tabbar-item @click="onChange(1)"><i class="iconfont">&#xe73a;</i><span>收藏</span></van-tabbar-item>
+				</van-tabbar>
+			</div>
 
-		<div class="de-push">
-			<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
-				<push-to 
-					@closeThis="closePush" 
-					:idlist="[...detailid]" 
-					:eventlist="[...eventid]" 
-					:linktoggle="'true'"
-					:linkurl="info.info.url"
-					:fid="fid"
-				></push-to>
-			</van-popup>
-		</div>
+			<div class="de-step" v-show="fontToggle">
+				<span class="min-step">16</span>
+				<van-slider v-model="fontValue" active-color="#ff6651" bar-height="4px" :max="28" :min="16">
+				  <div slot="button" class="custom-button">
+				    {{ fontValue }}
+				  </div>
+				</van-slider>
+				<span class="max-step">28</span>
+			</div>
+
+			<div class="de-push">
+				<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
+					<push-to 
+						@closeThis="closePush" 
+						:idlist="[...this.pushQuery.event_id]" 
+						:eventlist="[...this.pushQuery.event_id]" 
+						:linktoggle="'true'"
+						:linkurl="info.info.url"
+						:fid="this.pushQuery.fid"
+					></push-to>
+				</van-popup>
+			</div>
+		</van-popup>
 
 		<!-- 预警推送 -->
 		<van-popup 
@@ -79,26 +70,14 @@
 			:style="{ height: '100%', width: '100%' }"
 		>
 			<lazy-component>
-				<push-page :idlist="[detailid]" :eventlist="[eventid]" :pushid="detailid" :fid="fid" @onCloseOne="closeHandle"></push-page>
+				<push-page 
+					:idlist="[this.pushQuery.event_id]" 
+					:eventlist="[this.pushQuery.event_id]" 
+					:pushid="this.pushQuery.event_id" 
+					:fid="this.pushQuery.fid"
+				></push-page>
 			</lazy-component>
 		</van-popup>
-
-		<!-- 完成弹框 -->
-		<van-dialog
-			v-model="finishToggle"
-			title="添加留言"
-			show-cancel-button
-			@confirm="onClickConfirm"
-		>
-			<van-field
-				v-model="message"
-				rows="3"
-				autosize
-				type="textarea"
-				placeholder="请输入留言"
-				show-word-limit
-			></van-field>
-		</van-dialog>
 
 	</div>
 </template>
@@ -138,6 +117,7 @@ export default {
 	},
 	data() {
 		return {
+			defaultshow: true,
 			message: '',
 			finishToggle: false,
 			pushpageToggle: false,
@@ -151,7 +131,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['paddingTT', 'monitorEventList', 'userid', 'sub_uid']),
+		...mapState(['pushQuery']),
 		...mapGetters(['getUserid', 'getSubid'])
 	},
 	mounted() {
@@ -161,21 +141,21 @@ export default {
 			}
 		}, 20000)
 		this.$nextTick(() => {
-			if(this.getUserid) {
-				this.getDetailData(this.getUserid, this.getSubid)
+			if(this.pushQuery.fid) {
+				this.getMoniInfo()
 			}else {
-				this.getDetailData(this.userid, this.sub_uid)
+				this.getCityInfo()
 			}
 		})
 	},
-	watch: {
-		detailid() {
-			this.getDetailData()
-		}
-	},
 	methods: {
-		closeHandle(id) {
-			this.$emit('onFinished', id)
+		onClose() {
+			this.$router.push('/message')
+			if(this.pushQuery.type == 'push_event') {
+				this.$store.commit('handleMessageType', 1)
+			}else {
+				this.$store.commit('handleMessageType', 0)
+			}
 		},
 		onClickdodel() {
 			Dialog.confirm({
@@ -214,7 +194,6 @@ export default {
 						remark: this.message
 					}
 				}).then((res) => {
-					this.$emit('onFinished', this.detailid)
 					Toast.success(res.data.msg)
 				}).catch((res) => {
 					Toast.fail(res.data.msg)
@@ -228,38 +207,55 @@ export default {
 				this.finishToggle = true
 			}
 		},
-		getDetailData() {
-			// alert('详情页事件id:' + this.eventid)
-			if(this.fid == '' || this.fid == '-1' || this.fid == '0') {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/City/webcache',
-					data: {
-						uid: this.getUserid,
-						sub_uid: this.getSubid,
-						event_id: this.eventid
-					}
-				}).then((res) => {
-					this.info = res.data.data
-				}).catch((res) => {
-					Toast.fail(res.msg)
-				})
-			}else {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/Monitor/webcache',
-					data: {
-						uid: this.getUserid,
-						sub_uid: this.getSubid,
-						fid: this.fid,
-						mainid: this.eventid
-					}
-				}).then((res) => {
-					this.info = res.data.data
-				}).catch((res) => {
-					Toast.fail(res.msg)
-				})
+		getCityInfo() {
+			alert('city' +":"+ this.getSubid)
+			alert('city' +":"+ JSON.stringify(this.pushQuery))
+			let push_event_id = ''
+			for(let item in this.pushQuery) {
+				alert(item +":"+ this.pushQuery[item])
+				if(item == 'event_id') {
+					push_event_id = this.pushQuery[item]
+				}
 			}
+			this.$axios({
+				method: 'post',
+				url: '/index.php/City/webcache',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					event_id: push_event_id
+				}
+			}).then((res) => {
+				if(res.data.data.info) {
+					this.info = res.data.data
+				}else {
+					this.$router.push('/message')
+				}
+			}).catch((res) => {
+				Toast.fail(res.msg)
+			})
+		},
+		getMoniInfo() {
+			alert('monitor' +":"+ this.getSubid)
+			alert('monitor' +":"+ JSON.stringify(this.pushQuery))
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Monitor/webcache',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					fid: this.pushQuery.fid,
+					mainid: this.pushQuery.event_id
+				}
+			}).then((res) => {
+				if(res.data.data.info) {
+					this.info = res.data.data
+				}else {
+					this.$router.push('/message')
+				}
+			}).catch((res) => {
+				Toast.fail(res.msg)
+			})
 		},
 		closePush() {
 			this.pushToggle = false
@@ -320,7 +316,11 @@ export default {
 						event_id: this.eventid
 					}
 				}).then((res) => {
-					Toast.success(res.data.msg)
+					if(res.data.status == '1') {
+						Toast.success(res.data.msg)
+					}else {
+						Toast.fail(res.data.msg)
+					}
 				}).catch((res) => {
 					Toast.fail(res.data.msg)
 				})

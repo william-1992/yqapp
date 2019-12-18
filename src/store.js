@@ -5,18 +5,19 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    token: '',                      // TOKEN值
-    fid: '',                        // 监测中心fid
-  	userid: '',						          // 用户ID
-  	nickname: '',                   // 用户名称（中文）
-  	company_name: '',				        // 公司名称
+    token: '',                     // TOKEN值
+    fid: '',                       // 监测中心fid
+  	userid: '',		                 // 用户ID - 主账户
+    sub_uid: '',                    // 用户id - 子账户
+  	nickname: '',                  // 用户名称（中文）
+  	company_name: '',				       // 公司名称
   	company_short_name: '',         // 公司簡稱
   	home_tabs_name: '监测中心',		   // 搜索组件title值
   	mesType: '',
     isComponent: 'message',         // Tabbar当前显示页面
     loginToggle: true,             // 登陆状态判断
     paddingTT: 0,                  // 状态栏高度
-    toolbarToggle: true,           // 底部标签栏开关
+    toolbarToggle: false,           // 底部标签栏开关
     popupToggle: false,            // 搜索页面开关
     checkboxToggleCenter: false,   // 中心复选框开关
     checkboxToggleCity: false,     // 城市复选框开关
@@ -28,8 +29,12 @@ export default new Vuex.Store({
     monitorEventList: [],          // 监测数据列表
     collEventList: [],              // 收藏数据列表
     warnEventList: [],              // 预警列表
-    monitorQuery: {
+    reportToken: '',               // 报告详情token
+    messageTepe: '0',            // 消息页面切换状态
+    pushQuery: {},               // 个推消息所有参数 
+    monitorQuery: {                 // 监测中心请求参数
       uid: '',
+      sub_uid: '',
       fid: '',
       areaid: '',
       time: '',
@@ -37,14 +42,14 @@ export default new Vuex.Store({
       e_time: '',
       point: '',
       source: '',
-      push: 'push_y',
       sort_type: 'pub_time',
-      page: 0,
+      page: 1,
       keyword: '',
       es_type: ''
     },
-    cityQuery: {
+    cityQuery: {                    // 城市舆情请求参数
       uid: '',
+      sub_uid: '',
       areaid: '',
       time: '',
       s_time: '',
@@ -52,29 +57,86 @@ export default new Vuex.Store({
       point: '',
       source: '',
       sort_type: '',
-      page: 0,
+      page: 1,
       keyword: '',
       es_type: ''
     },
-    collQuery: {
+    collQuery: {                    // 收藏请求参数
       uid: '',
+      sub_uid: '',
       keyword: '',
-      page: 0
+      page: 1
     },
-    warnQuery: {
+    warnQuery: {                    // 预警请求参数
       uid: '',
+      sub_uid: '',
       fid: '',
       sort_type: 'urgent',
-      page: 0,
+      page: 1,
       limit: 10
     }
   },
   getters: {
     tokens: state => {
-      return state.token
+      return localStorage.getItem('token')
+    },
+    getUserid: state => {
+      let id = localStorage.getItem('userid')
+      if(id) {
+        return id
+      }else {
+        return state.userid
+      }
+    },
+    getSubid: state => {
+      let id = localStorage.getItem('subid')
+      if(id) {
+        return id
+      }else {
+        return state.sub_uid
+      }
+    },
+    getNickname: state => {
+      let name = localStorage.getItem('nickname')
+      if(name) {
+        return name
+      }else {
+        return state.nickname
+      }
+    },
+    getCompany: state => {
+      let name = localStorage.getItem('company_name')
+      if(name) {
+        return name
+      }else {
+        return state.company_name
+      }
+    },
+    getCompanyShort: state => {
+      let name = localStorage.getItem('company_short_name')
+      if(name) {
+        return name
+      }else {
+        return state.company_short_name
+      }
     }
   },
   mutations: {
+    handlePushQuery(state, val) {
+      state.pushQuery = val
+    },
+    handleMessageType(state, val) {
+      state.messageTepe = val
+    },
+    handleToolbar(state, val) {
+      state.toolbarToggle = val
+    },
+    handleReportToken(state, val) {
+      state.reportToken = val
+    },
+    handleSubid(state, val) {
+      state.sub_uid = val
+    },
     handleToken(state, val) {
       state.token = val
     },

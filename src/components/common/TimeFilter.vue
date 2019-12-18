@@ -22,7 +22,7 @@
 			<li v-for="(item, index) in sourcelist" :key="item.id" :class="item.class" @click="onClickSource(item.id, index)">{{item.title}}</li>
 		</ul>
 		<div class="btn-wrap">
-			<van-button type="warning" color="#6f7ea0">重置</van-button>
+			<van-button type="warning" color="#6f7ea0" @click="onReset">重置</van-button>
 			<van-button type="danger" color="#ff6651" @click="onClickSure">保存</van-button>
 		</div>
 
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-	import { mapState } from 'vuex';
+	import { mapState, mapGetters } from 'vuex';
 	import {
 		Toast
 	} from 'vant';
@@ -57,7 +57,7 @@
 		data() {
 			return {
 				showDate: false,
-				minDate: new Date(2019, 4, 1),
+				minDate: new Date(2012, 1, 1),
 				dataTitle: '开始时间',
 				currentDate: new Date(),
 				zdytoggle: true,
@@ -87,7 +87,8 @@
 			this.showSourceList()
 		},
 		computed: {
-			...mapState(['monitorQuery', 'cityQuery'])
+			...mapState(['monitorQuery', 'cityQuery']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
 			es_source(val) {
@@ -112,7 +113,6 @@
 				}
 			},
 			e_time(val) {
-				console.log('123')
 				if(this.pageType == 'centerpage') {
 					this.monitorQuery.e_time = val
 				}else {
@@ -147,27 +147,34 @@
 			}
 		},
 		methods: {
+			onReset() {
+				this.onClickDate('0')
+				this.onClickView('0')
+				this.onClickSource('', '0')
+			},
 			onClickSure() {
 				if(this.pageType == 'citypage') {
 					let startTime = ''
 					let endTime = ''
 					this.s_time == '开始时间' ? startTime = '' : startTime = this.s_time
 					this.e_time == '结束时间' ? endTime = '' : endTime = this.e_time
+					this.$store.state.cityQuery.page = 1
 					this.$axios({
 						method: 'post',
 						url: '/index.php/City/getESearch',
 						data: this.cityQuery
 					}).then((res) => {
-						let list = res.data.data.eventList
-						if(list.length > 0) {
-							list.forEach((item) => {
-								item.wordStr = item.wordStr.split('+')
-							})
-							this.$store.commit('handleCityList', list)
+						if(res.data.status == '1') {
+							let list = res.data.data.eventList
+							if(list.length > 0) {
+								this.$store.commit('handleCityList', list)
+							}else {
+								this.$store.commit('handleCityList', [])
+							}
+							this.$emit('closePopup', false)
 						}else {
-							this.$store.commit('handleCityList', [])
+							Toast.fail(res.data.msg)
 						}
-						this.$emit('closePopup', false)
 					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
@@ -176,21 +183,26 @@
 					let endTime = ''
 					this.s_time == '开始时间' ? startTime = '' : startTime = this.s_time
 					this.e_time == '结束时间' ? endTime = '' : endTime = this.e_time
+					this.$store.state.monitorQuery.page = 1
 					this.$axios({
 						method: 'post',
 						url: '/index.php/Monitor/getESearch',
 						data: this.monitorQuery
 					}).then((res) => {
-						let list = res.data.data.eventList
-						if(list.length > 0) {
-							list.forEach((item, index) => {
-								item.wordStr = item.wordStr.split('+')
-							})
-							this.$store.commit('handleMonitorList', list)
+						if(res.data.status == '1') {
+							let list = res.data.data.eventList
+							if(list.length > 0) {
+								list.forEach((item, index) => {
+									item.wordStr = item.wordStr.split('+')
+								})
+								this.$store.commit('handleMonitorList', list)
+							}else {
+								this.$store.commit('handleMonitorList', [])
+							}
+							this.$emit('closePopup', false)
 						}else {
-							this.$store.commit('handleMonitorList', [])
+							Toast.fail(res.data.msg)
 						}
-						this.$emit('closePopup', false)
 					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
@@ -246,7 +258,8 @@
 						method: 'post',
 						url: '/index.php/Monitor/showSourceList',
 						data: {
-							uid: this.$store.state.uid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							fid: this.$store.state.fid
 						}
 					}).then((res) => {
@@ -265,9 +278,10 @@
 				}else {
 					this.$axios({
 						method: 'post',
-						url: '/index.php/City/showSource',
+						url: '/index.php/City/showSourceList',
 						data: {
-							uid: this.$store.state.userid
+							uid: this.getUserid,
+							sub_uid: this.getSubid
 						}
 					}).then((res) => {
 						res.data.data.forEach((item, index) => {
@@ -311,6 +325,31 @@
 			getDate(type) {
 				this.es_source = type
 				this.showDate = true
+
+				if(type == '1') {
+					this.minDate = new Date(2012, 1, 1)
+					let arr = []
+					if(this.s_time == '开始时间') {
+						this.currentDate = new Date()
+					}else {
+						arr = this.s_time.split('-')
+						this.currentDate = new Date(arr[0], arr[1]-1, arr[2])
+					}
+					
+				}else {
+					let arr = []
+					let endarr = []
+					if(this.s_time !== '开始时间') {
+						arr = this.s_time.split('-')
+						this.minDate = new Date(arr[0], arr[1]-1, arr[2])
+					}
+					if(this.e_time !== '结束时间') {
+						endarr = this.e_time.split('-')
+						this.currentDate = new Date(endarr[0], endarr[1]-1, endarr[2])
+					}
+
+					
+				}
 			},
 			closedata() {
 				this.showDate = false

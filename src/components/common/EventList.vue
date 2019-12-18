@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 export default {
 	name: 'event-list',
 	props: {
@@ -33,7 +34,7 @@ export default {
 	},
 	watch: {
 		eid(val) {
-			if(this.fid == '') {
+			if(this.fid == '' || this.fid == '-1' || this.fid == '0') {
 				this.getCity()
 			}else {
 				this.getCenter()
@@ -41,12 +42,15 @@ export default {
 		}
 	},
 	mounted() {
-		if(this.fid == '') {
+		if(this.fid == '' || this.fid == '-1' || this.fid == '0') {
 			this.getCity()
 		}else {
 			this.getCenter()
 		}
 			
+	},
+	computed: {
+		...mapGetters(['getUserid', 'getSubid'])
 	},
 	methods: {
 		getCity() {
@@ -54,12 +58,17 @@ export default {
 				method: 'post',
 				url: '/index.php/City/context',
 				data: {
-					uid: this.$store.state.userid,
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
 					event_id: this.eid,
 					areaid: this.aid
 				}
 			}).then((res) => {
-				this.eventList = res.data.data.list
+				if(res.data.status == '1') {
+					this.eventList = res.data.data.list
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})
@@ -69,13 +78,18 @@ export default {
 				method: 'post',
 				url: '/index.php/Monitor/context',
 				data: {
-					uid: this.$store.state.userid,
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
 					fid: this.fid,
 					event_id: this.eid,
 					areaid: this.aid
 				}
 			}).then((res) => {
-				this.eventList = res.data.data.list
+				if(res.data.status == '1') {
+					this.eventList = res.data.data.list
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})

@@ -2,10 +2,10 @@
 	<div class="mine">
 		<div class="title">
 			<div class="left">
-				<h5>{{ nickname }}</h5>
-				<p>{{ company_name }}</p>
+				<h5>{{ this.$store.getters.getNickname }}</h5>
+				<p>{{ this.$store.getters.getCompany }}</p>
 			</div>
-			<div class="right">{{ nickname.slice(0, 1) }}</div>
+			<div class="right">{{ this.$store.getters.getNickname.slice(0, 1) }}</div>
 		</div>
 		<div class="list-nav">
 			<ul>
@@ -46,12 +46,11 @@
 		>
 			<report />
 		</van-popup>
-
 	</div>
 </template>
 
 <script>
-import { Dialog } from 'vant';
+import { Dialog, Toast } from 'vant';
 import { mapState } from 'vuex';
 import Collection from '@c/mine/Collection';
 import Report from '@c/mine/Report';
@@ -59,7 +58,7 @@ export default {
 	name: 'mine',
 	components: {
 		Collection,
-		Report
+		Report,
 	},
 	inject: ['reload'],
 	computed: {
@@ -87,6 +86,15 @@ export default {
 			}]
 		}
 	},
+	filters: {
+		filterName(name) {
+			if(name) {
+				return name.slice(0, 1)
+			}else {
+				return this.$store.getters.getNickname.slice(0, 1)
+			}
+		}
+	},
 	methods: {
 		onClickClose() {
 			if(window.plus) {
@@ -104,14 +112,30 @@ export default {
 			plus.navigator.setStatusBarStyle('light');
 		},
 		handleClick(type) {
+			let self = this
 			if(type === 'C') {
 				Dialog.confirm({
 					message: '确定退出？',
 					confirmButtonText: '退出',
 					className: 'dialogtext'
 				}).then(() => {
-					this.reload()
-					this.$store.commit('handleLogin', true)
+					Toast.success({
+						message: '退出成功！',
+						duration: 1000
+					})
+					setTimeout(() => {
+						localStorage.removeItem('token')
+						localStorage.removeItem('userid')
+						localStorage.removeItem('subid')
+						localStorage.removeItem('nickname')
+						localStorage.removeItem('company_name')
+						localStorage.removeItem('company_short_name')
+						localStorage.removeItem('company_name')
+						this.$router.push('/')
+						this.$store.commit('handleToolbar', false)
+					}, 1500)
+					// this.reload()
+					// this.$store.commit('handleLogin', true)
 				}).catch(() => {
 					console.log('取消退出')
 				})

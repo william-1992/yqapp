@@ -1,7 +1,13 @@
 <template>
 	<div class="message">
 
-		<van-tabs v-model="activeyu" :line-width="13" title-active-color="#323948" title-inactive-color="#acb7cf" :border="false">
+		<van-tabs 
+			v-model="activeyu" 
+			:line-width="13" 
+			title-active-color="#323948" 
+			title-inactive-color="#acb7cf" 
+			:border="false"
+		>
 		  <van-tab :title="item.title" v-for="item in list"></van-tab>
 		</van-tabs>		
 
@@ -16,22 +22,22 @@
 			</p>
 		</div>
 
-		<mes-list :pageType="false"></mes-list>
-
+		<warn-list v-if="warnToggle" :pageType="false"></warn-list>
 	</div>
 </template>
 
 <script>
 import { Toast } from 'vant';
-import { mapState } from 'vuex';
-import MesList from '@c/message/WarnList';
+import { mapState, mapGetters } from 'vuex';
+import WarnList from '@c/message/WarnList';
 export default {
 	name: 'message',
 	components: {
-		MesList
+		WarnList
 	},
 	data() {
 		return {
+			warnToggle: false,
 			activeyu: 0,
 			list: [],
 			tabs2: [{
@@ -49,10 +55,17 @@ export default {
 		this.getPlanList()
 	},
 	computed: {
-		...mapState(['warnQuery'])
+		...mapState(['warnQuery']),
+		...mapGetters(['getUserid', 'getSubid'])
 	},
 	watch: {
 		activeyu(val) {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.$store.state.warnQuery.fid = this.list[val].id
 
 			this.$axios({
@@ -61,10 +74,15 @@ export default {
 				data: this.warnQuery
 			}).then((res) => {
 				let list = res.data.data
-				list.forEach((item, index) => {
-					item.words = item.words.split('+')
-				})
-				this.$store.commit('handleWarnList', list)
+				if(list.length > 0) {
+					list.forEach((item, index) => {
+						item.words = item.words.split('+')
+					})
+					this.$store.commit('handleWarnList', list)
+				}else {
+					this.$store.commit('handleWarnList', [])
+				}
+				Toast.clear()
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})
@@ -76,11 +94,13 @@ export default {
 				method: 'post',
 				url: '/index.php/Monitor/getPlanList',
 				data: {
-					uid: this.$store.state.userid
+					uid: this.getUserid,
+					sub_uid: this.getSubid
 				}
 			}).then((res) => {
 				this.list = res.data.data
 				this.$store.state.warnQuery.fid = res.data.data[0].id
+				this.warnToggle = true
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})

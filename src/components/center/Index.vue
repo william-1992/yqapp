@@ -18,6 +18,7 @@
 
 <script>
 import { Toast } from 'vant';
+import { mapGetters } from 'vuex';
 import Search from '@c/common/Search';
 import Hottest from '@c/common/Hottest';
 import TextList from '@c/center/List';
@@ -40,10 +41,16 @@ export default {
 		active(index) {
 			this.$store.state.fid = this.flist[index].id
 			this.fidd = this.flist[index].id
+			this.$store.state.monitorQuery.fid = this.fidd
 		} 
 	},
 	mounted() {
-		this.getPlanList()
+		this.$nextTick(() => {
+			this.getPlanList()
+		})
+	},
+	computed: {
+		...mapGetters(['getUserid', 'getSubid'])
 	},
 	methods: {
 		getData(data) {
@@ -54,20 +61,24 @@ export default {
 				method: 'post',
 				url: '/index.php/Monitor/getPlanList',
 				data: {
-					uid: this.$store.state.userid
+					uid: this.getUserid,
+					sub_uid: this.getSubid
 				}
 			}).then((res) => {
-				this.flist = res.data.data
-				this.fidd = res.data.data[0].id
-				this.$store.state.fid = res.data.data[0].id
-				this.$store.state.monitorQuery.fid = res.data.data[0].id
+				if(res.data.status == '1') {
+					this.flist = res.data.data
+					this.fidd = res.data.data[0].id
+					this.$store.state.fid = res.data.data[0].id
+					this.$store.state.monitorQuery.fid = res.data.data[0].id
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})
 		},
 		getTabs() {
-			console.log(this.active)
-
+			// console.log(this.active)
 		}
 	}
 }

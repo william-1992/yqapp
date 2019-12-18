@@ -43,13 +43,11 @@
 <script>
 import echarts from 'echarts';
 import { Toast } from 'vant';
+import { mapGetters, mapState } from 'vuex';
 export default {
 	name: 'doc-detail',
 	porps: {
-		detailtk: {
-			type: String,
-			default: 0
-		}
+		token: Number
 	},
 	data() {
 		return {
@@ -58,7 +56,8 @@ export default {
 			message: '',
 			mapprov: '',
 			chart: null,
-			category: []
+			category: [],
+			token: this.$attrs.token
 		}
 	},
 	computed: {
@@ -68,16 +67,23 @@ export default {
 				arr.push(this.category[i].name)
 			}
 			return arr
-		}
+		},
+		...mapGetters(['getUserid', 'getSubid']),
+		...mapState(['reportToken'])
 	},
 	mounted() {
-		this.getInfo()
 		this.$nextTick(function() {
+			this.getInfo()
 			setTimeout(() => {
 				this.getPie()
 				this.getCate()
 			}, 1000)
 		})
+	},
+	watch: {
+		reportToken(val) {
+			this.getInfo()
+		}
 	},
 	methods: {
 		getCate() {
@@ -161,8 +167,9 @@ export default {
 				method: 'post',
 				url: '/index.php/Report/getDocDetail',
 				data: {
-					uid: this.$store.state.userid,
-					token: this.detailtk
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					token: this.reportToken
 				}
 			}).then((res) => {
 				this.info = res.data.data.info

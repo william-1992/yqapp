@@ -26,7 +26,7 @@
 			position="right" 
 			:style="{ height: '100%', width: '100%' }"
 		>
-			<push-page :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true"></push-page>
+			<push-page :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true" @onCloseOne="closeHandle"></push-page>
 		</van-popup>
 
 		<van-popup 
@@ -37,7 +37,7 @@
 			position="right" 
 			:style="{ height: '100%', width: '100%' }"
 		>
-			<push-page-two :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true"></push-page-two>
+			<push-page-two :idlist="idlist" :eventlist="eventlist" :fid="fid" :fidlist="fidlist" :storeType="true" @onCloseTwo="closeHandle"></push-page-two>
 		</van-popup>
 
 	</div>
@@ -94,6 +94,10 @@ export default {
 		}
 	},
 	methods: {
+		closeHandle() {
+			this.pushpageToggle = false
+			this.pushpageTwoToggle = false
+		},
 		onClose() {
 			this.$emit('closeThis', false)
 		},

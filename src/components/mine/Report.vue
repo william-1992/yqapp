@@ -41,7 +41,7 @@
 				close-icon-position="top-left"
 				:style="{ width: '100%', height: '100%' }"
 			>
-				<doc-detail :detailtk="detailTk"></doc-detail>
+				<doc-detail :token="detailTk"></doc-detail>
 			</van-popup>
 
 
@@ -49,6 +49,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import { Dialog, Toast } from 'vant';
 import DocDetail from './DocDetail';
 export default {
@@ -72,13 +73,17 @@ export default {
 			method: 'post',
 			url: '/index.php/Monitor/getPlanList',
 			data: {
-				uid: this.$store.state.userid
+				uid: this.getUserid,
+				sub_uid: this.getSubid
 			}
 		}).then((res) => {
 			this.list = res.data.data
 		}).catch((res) => {
 			Toast.fail(res.data.msg)
 		})
+	},
+	computed: {
+		...mapGetters(['getUserid', 'getSubid'])
 	},
 	methods: {
 		onClickLeft() {
@@ -96,7 +101,8 @@ export default {
 				method: 'post',
 				url: '/index.php/Report/getDocList',
 				data: {
-					uid: this.$store.state.userid,
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
 					fid: id,
 					type: 'day'
 				}
@@ -107,7 +113,8 @@ export default {
 			})
 		},
 		onClickDetail(tk) {
-			this.detailTk = tk
+			// this.detailTk = tk
+			this.$store.commit('handleReportToken', tk)
 			this.detailToggle = true
 		},
 		onClickDelete(e, id) {

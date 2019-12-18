@@ -1,88 +1,92 @@
 <template>
 	<div class="list" :style="{ paddingTop: paddingTT + 'px' }">
 
-		<van-list 
-			v-model="loading" 
-			:error.sync="errored" 
-			error-text="请求失败，点击重新加载" 
-			:finished="finished" 
-			finished-text="没有更多了" 
-			@load="onLoad"
-		>
+		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
 
-			<van-swipe-cell v-for="item in monitorEventList" :key="item.id">
+			<van-list 
+				v-model="loading" 
+				:error.sync="errored" 
+				error-text="请求失败，点击重新加载" 
+				:finished="finished" 
+				finished-text="没有更多了" 
+				:immediate-check="false"
+				@load="onLoad"
+			>
+				<van-swipe-cell v-for="item in monitorEventList" :key="item.id">
 
-				<!-- <van-cell :border="false"> -->
-				<div class="li-wrap">
-					<div class="title">
-						<div class="left">
-							<van-checkbox 
-								v-show="checkboxToggleCenter" 
-								v-model="item.checked" 
-								:key="item.id" 
-								:name="item.id" 
-								checked-color="#ff6651"
-							 	@click.stop="onClickRadio(item.id)"
-							></van-checkbox>
-							<div class="rect zheng" v-if="item.isnegative == '1'">正</div>
-							<div class="rect fu" v-else-if="item.isnegative == '2'">负</div>
-							<div class="rect zhong" v-else>中</div>
-							<div class="frie" @click.stop="onLinkEvent(item.areaid, item.event_id)">{{ item.docount }}</div>
+					<!-- <van-cell :border="false"> -->
+					<div class="li-wrap">
+						<div class="title">
+							<div class="left">
+								<van-checkbox 
+									v-show="checkboxToggleCenter" 
+									v-model="item.checked" 
+									:key="item.id" 
+									:name="item.id" 
+									checked-color="#ff6651"
+								 	@click.stop="onClickRadio(item.id)"
+								></van-checkbox>
+								<div class="rect zheng" v-if="item.isnegative == '2'">正</div>
+								<div class="rect fu" v-else-if="item.isnegative == '1'">负</div>
+								<div class="rect zhong" v-else>中</div>
+								<div class="frie" @click.stop="onLinkEvent(item.areaid, item.event_id)">{{ item.docount }}</div>
+							</div>
+							<div class="right">
+								{{item.preTimeStr}}前更新
+							</div>
 						</div>
-						<div class="right">
-							{{item.preTimeStr}}前更新
+						<div class="timer">
+							<div class="timer-left">
+								<img v-if="item.site_icon_type == 2" src="../../assets/images/newicon05.png" />
+								<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon01.png" />
+								<img v-else-if="item.site_icon_type == 10" src="../../assets/images/newicon12.png" />
+								<img v-else-if="item.site_icon_type == 20" src="../../assets/images/newicon09.png" />
+								<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
+								<img v-else-if="item.site_icon_type == 3" src="../../assets/images/newicon03.png" />
+								<img v-else-if="item.site_icon_type == 9" src="../../assets/images/newicon04.png" />
+								<img v-else-if="item.site_icon_type == 4" src="../../assets/images/newicon07.png" />
+								<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
+								<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
+								<img v-else src="../../assets/images/newicon11.png" />
+								<span>{{ item.site_name | nameLength }}</span>
+								<!-- <i class="iconfont">&#xe623;</i>
+								<span v-if="item.source == 1">博客</span>
+								<span v-else-if="item.source == 2">微信</span>
+								<span v-else>头条</span> -->
+							</div>
+							<div class="timer-right">
+								首次收录： {{item.addtimeStr}}
+							</div>
+						</div>
+						<div class="desc" @click="openDetail(item.id, item.event_id)">
+							<p>{{item.event_title | textLength}}</p>
+						</div>
+						<div class="tags">
+							<h5>监控词组：</h5>
+							<p>
+								<span v-for="(val, index) in item.wordStr" :key="index">{{ val }}</span>
+							</p>
 						</div>
 					</div>
-					<div class="timer">
-						<div class="timer-left">
-							<img v-if="item.site_icon_type == 2" src="../../assets/images/newicon05.png" />
-							<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon01.png" />
-							<img v-else-if="item.site_icon_type == 10" src="../../assets/images/newicon12.png" />
-							<img v-else-if="item.site_icon_type == 20" src="../../assets/images/newicon09.png" />
-							<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
-							<img v-else-if="item.site_icon_type == 3" src="../../assets/images/newicon03.png" />
-							<img v-else-if="item.site_icon_type == 9" src="../../assets/images/newicon04.png" />
-							<img v-else-if="item.site_icon_type == 4" src="../../assets/images/newicon07.png" />
-							<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
-							<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
-							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.site_name }}</span>
-							<!-- <i class="iconfont">&#xe623;</i>
-							<span v-if="item.source == 1">博客</span>
-							<span v-else-if="item.source == 2">微信</span>
-							<span v-else>头条</span> -->
-						</div>
-						<div class="timer-right">
-							首次收录： {{item.addtimeStr}}
-						</div>
-					</div>
-					<div class="desc" @click="openDetail(item.id, item.event_id)">
-						<p>{{item.event_title | textLength}}</p>
-					</div>
-					<div class="tags">
-						<h5>监控词组：</h5>
-						<p>
-							<span v-for="(val, index) in item.wordStr" :key="index">{{ val }}</span>
-						</p>
-					</div>
-				</div>
-				<!-- </van-cell> -->
-				<template slot="right">
-					<van-button type="default" @click="onClickOnePush(item.id, item.event_id)">
-						<i class="iconfont">&#xe623;</i><span>推送</span>
-					</van-button>
-					<van-button type="default" @click="onClickOneStore(item.id, item.event_id)">
-						<i class="iconfont">&#xe6e7;</i>
-						<span>收藏</span>
-					</van-button>
-					<van-button type="default" @click="onClickOneDelete(item.id, item.event_id)">
-						<i class="iconfont">&#xe6e9;</i>
-						<span>删除</span>
-					</van-button>
-				</template>
-			</van-swipe-cell>
+					<!-- </van-cell> -->
+					<template slot="right">
+						<van-button type="default" @click="onClickOnePush(item.id, item.event_id, item.event_url)">
+							<i class="iconfont">&#xe623;</i><span>推送</span>
+						</van-button>
+						<van-button type="default" @click="onClickOneStore(item.id, item.event_id)">
+							<i class="iconfont">&#xe6e7;</i>
+							<span>收藏</span>
+						</van-button>
+						<van-button type="default" @click="onClickOneDelete(item.id, item.event_id)">
+							<i class="iconfont">&#xe6e9;</i>
+							<span>删除</span>
+						</van-button>
+					</template>
+				</van-swipe-cell>
 
-		</van-list>
+			</van-list>
+
+		</van-pull-refresh>
 
 		<div class="allSelect" v-show="checkboxToggleCenter">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
@@ -103,7 +107,14 @@
 
 		<!-- 去推送 -->
 		<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
-			<push-to @closeThis="closePush" :idlist="idList" :eventlist="eventidList" :fid="fidd" :linktoggle="linkToggle"></push-to>
+			<push-to 
+				@closeThis="closePush" 
+				:idlist="idList" 
+				:eventlist="eventidList" 
+				:fid="fidd" 
+				:linktoggle="linkToggle"
+				:linkurl="detail_url"
+			></push-to>
 		</van-popup>
 
 	</div>
@@ -111,7 +122,7 @@
 
 <script>
 	import {
-		mapState
+		mapState, mapGetters
 	} from 'vuex';
 	import {
 		Toast,
@@ -132,6 +143,8 @@
 		},
 		data() {
 			return {
+				isLoading: false,
+				detail_url: '',
 				linkToggle: false,
 				pushToggle: false,
 				showLinkEventToggle: false,
@@ -151,7 +164,8 @@
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggleCenter', 'paddingTT', 'monitorEventList', 'fid', 'monitorQuery'])
+			...mapState(['checkboxToggleCenter', 'paddingTT', 'monitorEventList', 'fid', 'monitorQuery']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
 			page(val) {
@@ -169,17 +183,42 @@
 				}
 			},
 			fidd() {
-				this.getESearch()
-			},
-			monitorEventList(data) {
-				if(data.length <= 3) {
-					this.loading = true
-					this.getESearch()
-				}
-				// if(data.length < 4) {
-				// 	this.loading = false
-				// 	this.finished = true
-				// }
+				Toast.loading({
+					message: '加载中...',
+					forbidClick: true,
+					loadingType: 'spinner',
+					duration: 0
+				})
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Monitor/getESearch',
+					data: this.monitorQuery
+				}).then((res) => {
+					if(res.data.status == '1') {
+						let list = res.data.data.eventList
+						if(list.length > 0) {
+							list.forEach((item, index) => {
+								item.wordStr = item.wordStr.split('+')
+							})
+							this.$store.commit('handleMonitorList', list)
+							this.$store.state.monitorQuery.page = 1
+							// this.page++
+						}
+						if(list.length == 0){
+							this.$store.commit('handleMonitorList', [])
+							this.finished = true
+						}
+						this.loading = false
+					}else {
+						this.loading = false
+						this.errored = true	
+					}
+					Toast.clear()
+				}).catch((res) => {
+					this.loading = false
+					this.errored = true
+					Toast.fail(res.data.msg)
+				})
 			}
 		},
 		filters: {
@@ -189,16 +228,33 @@
 				}else {
 					return val
 				}
+			},
+			nameLength(val) {
+				if(val.length > 10) {
+					return val.slice(0, 10) + '...'
+				}else {
+					return val
+				}
 			}
 		},
 		mounted() {
 			this.$nextTick(function() {
-				this.getESearch()
+				// this.getESearch()
 			})
 		},
 		methods: {
+			onRefresh() {
+				setTimeout(() => {
+					this.$store.commit('handleMonitorList', [])
+					this.$toast('刷新成功');
+					this.getESearch()
+					this.$store.state.monitorQuery.page = 0
+        	this.isLoading = false;
+        	// this.count++;
+				}, 500)
+			},
 			closePush() {
-
+				this.pushToggle = false
 			},
 			detailClose() {
 				this.showDetailToggle = false
@@ -212,7 +268,8 @@
 						url: '/index.php/Monitor/eventBatchDelete',
 						data: {
 							fid: this.fidd,
-							uid: this.$store.state.userid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							event_idlist: [eid]
 						}
 					}).then((res) => {
@@ -232,22 +289,25 @@
 						url: '/index.php/City/favorite',
 						data: {
 							fid: this.fidd,
-							uid: this.$store.state.userid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							main_id: id,
 							event_id: eid
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-
+						if(res.data.status == '1') {
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
 					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
-				}).catch(() => {
-
 				})
 			},
-			onClickOnePush(id, eid) {
+			onClickOnePush(id, eid, url) {
 				this.linkToggle = true
+				this.detail_url = url
 				this.idList = []
 				this.eventidList = []
 				for(let i=0; i<this.monitorEventList.length; i++) {
@@ -267,27 +327,49 @@
 					url: '/index.php/Monitor/getESearch',
 					data: this.monitorQuery
 				}).then((res) => {
-					let list = res.data.data.eventList
-					if(list.length > 0) {
-						list.forEach((item, index) => {
-							item.wordStr = item.wordStr.split('+')
-						})
-						this.$store.commit('handleMonitorList', this.monitorEventList.concat(list))
-						this.page++
+					if(res.data.status == '1') {
+						let list = res.data.data.eventList
+						if(list.length > 0) {
+							list.forEach((item, index) => {
+								item.wordStr = item.wordStr.split('+')
+							})
+							this.$store.commit('handleMonitorList', this.monitorEventList.concat(list))
+							this.$store.state.monitorQuery.page = this.$store.state.monitorQuery.page + 1
+							// this.page++
+						}
+						if(list.length == 0){
+							// this.$store.commit('handleMonitorList', this.monitorEventList.concat(list))
+							this.finished = true
+						}
+						this.loading = false
 					}else {
-						this.finished = true
+						this.loading = false
+						this.errored = true
+						Toast.fail(res.data.msg)
 					}
-					this.loading = false
+					this.isLoading = false
 				}).catch((res) => {
 					this.loading = false
 					this.errored = true
-					Toast.fail(res.data.msg)
 				})
 			},
 			onClickRadio(id) {
 				console.log(id)
+				let len = this.monitorEventList.length
+				let list = []
+				for(let i=0; i<len; i++) {
+					if(this.monitorEventList[i].checked) {
+						list.push(this.monitorEventList[i].id)
+					}
+				}
+				// if(len == list.length) {
+				// 	this.allchecked = true
+				// }else {
+				// 	this.allchecked = false
+				// }
 			},
 			onLoad() {
+				console.log('滚动')
 				// 异步更新数据
 				setTimeout(() => {
 					this.getESearch()
@@ -346,7 +428,8 @@
 							url: '/index.php/Monitor/eventBatchDelete',
 							data: {
 								fid: this.$store.state.fid,
-								uid: this.$store.state.userid,
+								uid: this.getUserid,
+								sub_uid: this.getSubid,
 								event_idlist: arr
 							}
 						}).then((res) => {
@@ -382,11 +465,7 @@
 		right: 0;
 		bottom: px2rem(25);
 		top: px2rem(120);
-		overflow: hidden;
-		.van-list {
-			height: 100%;
-			overflow: auto;
-		}
+		overflow: auto;
 		.van-popup {
 			overflow: hidden;
 		}
@@ -464,7 +543,7 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 30% 60%;
+						background-size: 11px 16px;
 					}
 				}
 

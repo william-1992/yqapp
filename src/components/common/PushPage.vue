@@ -51,11 +51,16 @@
 			  />
 			  <p>{{this.message.length}} / 50</p>
 		</section>
+
+		<van-overlay :show="layshow" @click="layshow = false" />
+
 	</div>
 </template>
 
 <script>
 import { Toast } from 'vant';
+import { mapGetters } from 'vuex';
+
 export default {
 	name: 'push-page',
 	props: {
@@ -82,6 +87,7 @@ export default {
 	},
 	data() {
 		return {
+			layshow: false,
 			sendradio: '1',
 			checked: false,
 			message: '',
@@ -93,6 +99,9 @@ export default {
 	mounted() {
 		this.getUser()
 	},
+	computed: {
+		...mapGetters(['getUserid', 'getSubid'])
+	},
 	methods: {
 		onPush() {
 			if(this.result.length === 0) {
@@ -100,8 +109,6 @@ export default {
 				return false
 			}else {
 				let arr = []
-				let arr2 = []
-				let arr3 = []
 				for(let i=0; i<this.namelist.length; i++) {
 					for(let j=0; j<this.result.length; j++) {
 						if(this.result[j] == this.namelist[i].nickname ) {
@@ -109,75 +116,172 @@ export default {
 						}
 					}
 				}
-				for(let i=0; i<this.fidlist.length; i++) {
-					if(arr2.indexOf(this.fidlist[i]) == -1) {
-						arr2.push(this.fidlist[i])
-					}
-				}
+				// 判断storeType为true时走收藏页推送，为false时走转发和其它推送接口
 				if(this.storeType) {
-					for(let i=0; i<this.eventlist.length; i++) {
-						if(arr3.indexOf(this.eventlist[i]) == -1) {
-							arr3.push(this.eventlist[i])
-						}
-					}
-					this.$axios({
-						method: 'post',
-						url: '/index.php/Push/pushtoSubUser',
-						data: {
-							fid: arr2,
-							main_id: arr3,
-							sub_userlist: arr,
-							remark: this.message
-						}
-					}).then((res) => {
-						Toast.success(res.data.msg)
-					}).catch((res) => {
-						Toast.fail(res.data.msg)
-					})
+					// 收藏 - 推送
+					this.pushToSubuser()
 				}else {
 					if(this.pushid !== '') {
-						this.$axios({
-							method: 'post',
-							url: '/index.php/Push/forward',
-							data: {
-								uid: this.$store.state.userid,
-								event_push_id: this.pushid,
-								sub_userlist: arr,
-								remark: this.message
-							}
-						}).then((res) => {
-							Toast.success(res.data.msg)
-						}).catch((res) => {
-							Toast.fail(res.data.msg)
-						})
+						// 推送 - 转发
+						this.pushForward()
 					}else {
-						this.$axios({
-							method: 'post',
-							url: '/index.php/Push/pushtoSubUser',
-							data: {
-								fid: this.fid,
-								main_id: this.eventlist,
-								sub_userlist: arr,
-								remark: this.message
-							}
-						}).then((res) => {
-							Toast.success(res.data.msg)
-						}).catch((res) => {
-							Toast.fail(res.data.msg)
-						})
+						// fid不为数组时，城市舆情页和监测中心页推送时
+						this.pushToPage()
 					}
 				}
 			}
+		},
+		pushToPage() {
+			let eventarr = []
+			let arr = []
+			for(let i=0; i<this.namelist.length; i++) {
+				for(let j=0; j<this.result.length; j++) {
+					if(this.result[j] == this.namelist[i].nickname ) {
+						arr.push(this.namelist[i].id)
+					}
+				}
+			}
+			for(let i=0; i<this.eventlist.length; i++) {
+				if(eventarr.indexOf(this.eventlist[i]) == -1) {
+					eventarr.push(this.eventlist[i])
+				}
+			}
+			this.layshow = true
+			Toast.loading({
+				message: '推送中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Push/pushToSubUser',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					fid: this.fid,
+					main_id: eventarr,
+					sub_userlist: arr,
+					remark: this.message
+				}
+			}).then((res) => {
+				if(res.data.status == '1') {
+					this.layshow = false
+					Toast.success(res.data.msg)
+					this.$emit('onCloseOne')
+				}else {
+					setTimeout(() => {
+						this.layshow = false
+						this.$emit('onCloseOne')
+						Toast.clear()
+					}, 800)
+					Toast.fail({
+						message: res.data.msg,
+						duration: 800
+					})
+				}
+			})	
+		},
+		pushToSubuser() {
+			let arr = []
+			for(let i=0; i<this.namelist.length; i++) {
+				for(let j=0; j<this.result.length; j++) {
+					if(this.result[j] == this.namelist[i].nickname ) {
+						arr.push(this.namelist[i].id)
+					}
+				}
+			}
+			this.layshow = true
+			Toast.loading({
+				message: '推送中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Push/pushToSubUser',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+
+					fid: this.fidlist,
+					main_id: this.eventlist,
+					sub_userlist: arr,
+					remark: this.message
+				}
+			}).then((res) => {
+				if(res.data.status == '1') {
+					this.layshow = false
+					Toast.success(res.data.msg)
+					this.$emit('onCloseOne')
+				}else {
+					this.layshow = false
+					Toast.fail(res.data.msg)
+					this.$emit('onCloseOne')
+				}
+				Toast.clear()
+			}).catch((res) => {
+				this.layshow = false
+				Toast.fail(res.data.msg)
+			})
+		},
+		pushForward() {
+			let arr = []
+			for(let i=0; i<this.namelist.length; i++) {
+				for(let j=0; j<this.result.length; j++) {
+					if(this.result[j] == this.namelist[i].nickname ) {
+						arr.push(this.namelist[i].id)
+					}
+				}
+			}
+			this.layshow = true
+			Toast.loading({
+				message: '推送中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Push/forward',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					event_push_id: this.pushid,
+					sub_userlist: arr,
+					remark: this.message
+				}
+			}).then((res) => {
+				if(res.data.status == '1') {
+					this.layshow = false
+					Toast.success(res.data.msg)
+					this.$emit('onCloseOne', this.pushid)
+				}else {
+					// this.layshow = false
+					Toast.fail(res.data.msg)
+					// this.$emit('onCloseOne')
+				}
+			}).catch((res) => {
+				this.layshow = false
+				Toast.fail(res.data.msg)
+				this.$emit('onCloseOne')
+			})
 		},
 		getUser() {
 			this.$axios({
 				method: 'post',
 				url: '/index.php/User/getSubUserTree',
 				data: {
-					uid: this.$store.state.userid
+					uid: this.getUserid,
+					sub_uid: this.getSubid
 				}
 			}).then((res) => {
-				this.namelist = res.data.data.userList
+				if(res.data.status == '1') {
+					this.namelist = res.data.data.userList
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})

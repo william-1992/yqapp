@@ -1,25 +1,29 @@
 <template>
 	<div class="list">
 
+
+
+		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+
 		<van-list 
 			v-model="loading" 
 			:finished="finished" 
 			:error.sync="errored" 
 			error-text="请求失败，点击重新加载" 
 			finished-text="没有更多了" 
+			:immediate-check="false"
 			@load="onLoad"
 		>
 
 			<van-swipe-cell v-for="item in collEventList" :key="item.id">
-
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
 					<div class="title">
 						<div class="left">
 							<van-checkbox v-show="checkboxToggleColl" v-model="item.checked" :key="item.id" :name="item.id" checked-color="#ff6651"
 							 @click.stop="onClickRadio(item.id)"></van-checkbox>
-							<div class="rect zheng" v-if="item.point == '1'">正</div>
-							<div class="rect fu" v-else-if="item.point == '2'">负</div>
+							<div class="rect zheng" v-if="item.point == '2'">正</div>
+							<div class="rect fu" v-else-if="item.point == '1'">负</div>
 							<div class="rect zhong" v-else>中</div>
 							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.id, item.fid || 0)">{{ item.docount }}</div>
 						</div>
@@ -37,7 +41,7 @@
 							<img v-else-if="item.site_icon_type == 6" src="../../assets/images/newicon10.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
 
-							<span>{{ item.site_name }}</span>
+							<span>{{ item.site_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
 							首次收录： {{item.addtimeStr}}
@@ -67,6 +71,11 @@
 			</van-swipe-cell>
 
 		</van-list>
+
+		</van-pull-refresh>
+
+
+
 
 		<div class="allSelect" v-show="checkboxToggleColl">
 			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
@@ -107,7 +116,14 @@
 			get-container="body"
 			:style="{ height: '23%' }"
 		>
-			<push-to :fidlist="[...fidlist]" :eventlist="[...eventlist]" :idlist="[...idlist]" :linkurl="detailUrl" :linktoggle="linkToggle"></push-to>
+			<push-to 
+				:fidlist="[...fidlist]" 
+				:eventlist="[...eventlist]" 
+				:idlist="[...idlist]" 
+				:linkurl="detailUrl" 
+				:linktoggle="linkToggle"
+				@closeThis="closePush"
+			></push-to>
 		</van-popup>
 
 	</div>
@@ -116,7 +132,7 @@
 <script>
 	import { Toast, Dialog } from 'vant';
 	import {
-		mapState
+		mapState, mapGetters
 	} from 'vuex';
 	import Detail from '@c/common/Detail';
 	import EventList from '@c/common/EventList';
@@ -130,6 +146,7 @@
 		},
 		data() {
 			return {
+				isLoading: false,
 				linkToggle: false,
 				pushToggle: false,
 				showLinkEventToggle: false,
@@ -150,11 +167,12 @@
 			}
 		},
 		computed: {
-			...mapState(['checkboxToggleColl', 'collEventList', 'collQuery'])
+			...mapState(['checkboxToggleColl', 'collEventList', 'collQuery']),
+			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
 			page(val) {
-				this.collQuery.page = val
+				// this.collQuery.page = val
 			},
 			allchecked(val) {
 				if (val) {
@@ -175,19 +193,42 @@
 				}else {
 					return val
 				}
+			},
+			nameLength(val) {
+				if(val.length > 10) {
+					return val.slice(0, 10) + '...'
+				}else {
+					return val
+				}
 			}
 		},
 		mounted() {
 			this.getList()
 		},
 		methods: {
+			onRefresh() {
+				setTimeout(() => {
+					this.$store.commit('handleCollList', [])
+					this.$store.state.collQuery.page = 0
+					this.getList()
+					Toast('刷新成功')
+				}, 500)
+			},
+			closePush() {
+				this.pushToggle = false
+			},
 			onClickOnePush(id, eid, fid, url) {
+				this.idlist = []
+				this.eventlist = []
+				this.fidlist = []
+
 				this.linkToggle = true
 				this.detailId = id
 				this.eventId = eid
 				this.idlist.push(id)
 				this.eventlist.push(eid)
-				this.fidd = fid
+				this.fidlist.push(fid)
+				// this.fidd = fid
 				this.detailUrl = url
 				this.pushToggle = true
 			},
@@ -199,16 +240,21 @@
 						method: 'post',
 						url: '/index.php/Favo/doDel',
 						data: {
-							uid: this.$store.state.userid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							main_id: id
 						}
 					}).then((res) => {
-						for(let i=0; i<this.collEventList.length; i++) {
-							if(this.collEventList[i].checked) {
-								this.collEventList.splice(i, 1)
+						if(res.data.status == '1') {
+							for(let i=0; i<this.collEventList.length; i++) {
+								if(this.collEventList[i].checked) {
+									this.collEventList.splice(i, 1)
+								}
 							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
 						}
-						Toast.success(res.data.msg)
 					}).catch((res) => {
 						Toast.fail(res.data.msg)
 					})
@@ -224,23 +270,26 @@
 					url: '/index.php/Favo/getList',
 					data: this.collQuery
 				}).then((res) => {
-					if(res.data.data.length > 0) {
-						this.$store.commit('handleCollList', this.collEventList.concat(res.data.data))
-						this.page ++
+					if(res.data.status == '1') {
+						if(res.data.data.length > 0) {
+							this.$store.commit('handleCollList', this.collEventList.concat(res.data.data))
+							this.$store.state.collQuery.page = this.$store.state.collQuery.page + 1
+						}else {
+							this.finished = true;
+						}
+						this.loading = false
 					}else {
-						this.finished = true;
+						this.loading = false
+						this.errored = true
 					}
-					this.loading = false
-				}).catch((res) => {
-					Toast.fail(res.data.msg)
-					this.loading = false
-					this.errored = true
+					this.isLoading = false
 				})
 			},
 			onClickRadio(id) {
 				console.log(id)
 			},
 			onLoad() {
+				console.log('load')
 				setTimeout(() => {
 
 					this.getList()
@@ -248,9 +297,7 @@
 					// this.loading = false;
 
 					// 数据全部加载完成
-					if (this.newlist.length >= 40) {
-						this.finished = true;
-					}
+					
 				}, 2000);
 			},
 			openDetail(eid, id, fid) {
@@ -274,6 +321,9 @@
 			},
 			onClickPush() {
 				this.linkToggle = false
+				this.idlist = []
+				this.eventlist = []
+				this.fidlist = []
 				for (let i = 0; i < this.collEventList.length; i++) {
 					if (this.collEventList[i].checked) {
 						this.idlist.push(this.collEventList[i].id)
@@ -299,7 +349,8 @@
 						method: 'post',
 						url: '/index.php/Favo/doDel',
 						data: {
-							uid: this.$store.state.userid,
+							uid: this.getUserid,
+							sub_uid: this.getSubid,
 							main_id: arr
 						}
 					}).then((res) => {
@@ -333,7 +384,6 @@
 		bottom: 0;
 		top: 1rem;
 		overflow: auto;
-		padding-bottom: px2rem(50);
 		font-size: 15px;
 
 		.van-popup {
@@ -413,7 +463,7 @@
 						background: #fff4f3 url('~@img/fire01.png') no-repeat 5px center;
 						padding-left: px2rem(18);
 						padding-right: px2rem(7);
-						background-size: 30% 60%;
+						background-size: 11px 16px;
 					}
 
 					h2 {
