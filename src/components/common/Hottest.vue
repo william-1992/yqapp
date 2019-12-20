@@ -85,6 +85,12 @@ export default {
 			this.show = false
 		},
 		onClickHandle(index, id) {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.list.forEach((item) => {
 				item.className = ''
 			})
@@ -114,6 +120,7 @@ export default {
 						}else {
 							this.$store.commit('handleMonitorList', [])
 						}
+						Toast.clear()
 					}else {
 						Toast.fail(res.data.msg)
 					}
@@ -136,6 +143,7 @@ export default {
 						}else {
 							this.$store.commit('handleCityList', [])
 						}
+						Toast.clear()
 					}else {
 						Toast.fail(res.data.msg)
 					}

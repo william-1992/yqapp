@@ -102,10 +102,19 @@ export default {
 				this.$store.state.warnQuery.fid = res.data.data[0].id
 				this.warnToggle = true
 			}).catch((res) => {
-				Toast.fail(res.data.msg)
+				Toast.fail('方案获取失败')
+				setTimeout(() => {
+					this.getPlanList()
+				})
 			})
 		},
 		onClickTabs2(index) {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.tabs2.forEach((item) => {
 				item.class = ''
 			})
@@ -117,10 +126,15 @@ export default {
 				data: this.warnQuery
 			}).then((res) => {
 				let list = res.data.data
-				list.forEach((item, index) => {
-					item.words = item.words.split('+')
-				})
-				this.$store.commit('handleWarnList', list)
+				if(list.length > 0) {
+					list.forEach((item, index) => {
+						item.words = item.words.split('+')
+					})
+					this.$store.commit('handleWarnList', list)
+					Toast.clear()
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})

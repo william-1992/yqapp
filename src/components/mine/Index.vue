@@ -130,7 +130,6 @@ export default {
 						localStorage.removeItem('nickname')
 						localStorage.removeItem('company_name')
 						localStorage.removeItem('company_short_name')
-						localStorage.removeItem('company_name')
 						this.$router.push('/')
 						this.$store.commit('handleToolbar', false)
 					}, 1500)
