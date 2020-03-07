@@ -54,8 +54,10 @@
 							首次收录： {{item.addtimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.event_id, item.areaid, item.id)">
-						<p>{{item.light | textLength}}</p>
+					<div class="desc" @click="openDetail(item.event_id, item.areaid, item.id, item.is_favo)">
+						<p v-html="item.event_title"></p>
+						<!-- <br>
+						<p>{{item.light | textLength}}</p> -->
 					</div>
 				</div>
 				<!-- </van-cell> -->
@@ -64,7 +66,11 @@
 						<i class="iconfont">&#xe623;</i>
 						<span>推送</span>
 					</van-button>
-					<van-button type="default" @click="onClickOneStore(item.id, item.event_id)">
+					<van-button type="default" @click="onClicknotStore(item.id, item.event_id)" v-if="item.is_favo">
+						<i class="iconfont">&#xe6e7;</i>
+						<span>取消收藏</span>
+					</van-button>
+					<van-button type="default" @click="onClickOneStore(item.id, item.event_id)" v-else>
 						<i class="iconfont">&#xe6e7;</i>
 						<span>收藏</span>
 					</van-button>
@@ -89,12 +95,12 @@
 		<!-- 详情页 -->
 		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
 		 :overlay="false" :style="{ height: '100%', width: '100%' }">
-			<detail :detailid="detail_id" :eventid="event_id" :deletebtn="false" :pageType="'city'"></detail>
+			<detail :detailid="detail_id" :eventid="event_id" :deletebtn="false" :pageType="'city'" :isfavo="isFavo" @backHandle="detailClose"></detail>
 		</van-popup>
 
 		<!-- 相似事件 -->
 		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list :eid="event_id" :aid="area_id"></event-list>
+			<event-list :eid="event_id" :areaid="area_id" @backHandle="eventClose"></event-list>
 		</van-popup>
 
 		<!-- 去推送 -->
@@ -127,6 +133,7 @@
 		props: ['cityhot'],
 		data() {
 			return {
+				isFavo: '',
 				isLoading: false,
 				detail_url: '',
 				linkToggle: false,
@@ -204,13 +211,58 @@
 			this.getCityData()
 		},
 		methods: {
+			detailClose(id) {
+				for(let i=0; i<this.cityEventList.length; i++) {
+					if(this.cityEventList[i].event_id == id) {
+						if(this.cityEventList[i].is_favo == 1) {
+							this.cityEventList[i].is_favo = 0
+							this.isFavo = 0
+						}else {
+							this.cityEventList[i].is_favo = 1
+							this.isFavo = 1
+						}
+					}
+				}
+				// this.showDetailToggle = false
+			},
+			eventClose() {
+				this.showLinkEventToggle = false
+			},
 			onRefresh() {
 				setTimeout(() => {
+					this.allchecked = false
 					this.$store.commit('handleCityList', [])
 					this.$toast('刷新成功');
         	this.getCityData()
-        	this.$store.state.cityQuery.page = 0
+        	this.$store.state.cityQuery.page = 1
 				}, 500)
+			},
+			onClicknotStore(id, eid) {
+				Dialog.confirm({
+					message: '确定取消收藏该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.getUserid,
+							main_id: [eid]
+						}
+					}).then((res) => {
+						if(res.data.status == '1') {
+							for(let i=0; i<this.cityEventList.length; i++) {
+								if(this.cityEventList[i].event_id == eid) {
+									this.cityEventList[i].is_favo = 0
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
+					})
+				})
 			},
 			onClickOneStore(id, eid) {
 				Dialog.confirm({
@@ -226,9 +278,18 @@
 							event_id: eid
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-					}).then((res) => {
-						Toast.fail(res.data.msg)
+						if(res.data.status == '1') {
+							for(let i=0; i<this.cityEventList.length; i++) {
+								if(this.cityEventList[i].event_id == eid) {
+									this.cityEventList[i].is_favo = 1
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
 					})
 				})
 			},
@@ -257,6 +318,12 @@
 				}
 			},
 			getCityData(type) {
+				Toast.loading({
+					message: '加载中...',
+					forbidClick: true,
+					loadingType: 'spinner',
+					duration: 0
+				})
 				this.$axios({
 					method: 'post',
 					url: '/index.php/City/getESearch',
@@ -264,9 +331,7 @@
 				}).then((res) => {
 					if(res.data.data.eventList.length > 0) {
 						let list = this.cityEventList.concat(res.data.data.eventList)
-						// this.newlist = this.newlist.concat(res.data.data.eventList)
 						this.$store.commit('handleCityList', list)
-						// this.page++
 						this.$store.state.cityQuery.page = this.$store.state.cityQuery.page + 1
 					}else {
 						this.$store.commit('handleCityList', [])
@@ -274,6 +339,7 @@
 					}
 					this.loading = false
 					this.isLoading = false
+					Toast.clear()
 				}).catch(() => {
 					this.loading = false
 					this.errored = true
@@ -286,14 +352,33 @@
 			onLoad() {
 				// 异步更新数据
 				setTimeout(() => {
-					this.getCityData()
+					this.$axios({
+						method: 'post',
+						url: '/index.php/City/getESearch',
+						data: this.cityQuery
+					}).then((res) => {
+						if(res.data.data.eventList.length > 0) {
+							let list = this.cityEventList.concat(res.data.data.eventList)
+							this.$store.commit('handleCityList', list)
+							this.$store.state.cityQuery.page = this.$store.state.cityQuery.page + 1
+						}else {
+							this.finished = true;
+						}
+						this.loading = false
+						this.isLoading = false
+						Toast.clear()
+					}).catch(() => {
+						this.loading = false
+						this.errored = true
+					})
 				}, 2000);
 			},
-			openDetail(eid, aid, id) {
+			openDetail(eid, aid, id, isfavo) {
 				this.showDetailToggle = true
 				this.event_id = eid
 				this.area_id = aid
 				this.detail_id = id
+				this.isFavo = isfavo
 				// this.idList = Array.from(new Set(this.idList.push(id)))
 				// this.eventidList.push(eid)
 			},
@@ -304,6 +389,7 @@
 			},
 			closePush() {
 				this.pushToggle = false
+				this.$store.commit('handleCheckboxCity', false)
 			},
 			onClickPush() {
 				this.linkToggle = false

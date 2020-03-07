@@ -7,7 +7,9 @@
     	</keep-alive> -->
 
       <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
+
       <picker></picker>
+      
     </div>
   </div>
 </template>
@@ -41,50 +43,7 @@ export default {
     ...mapState(['isComponent', 'toolbarToggle', 'overlayToggle', 'loginToggle', 'token']),
     ...mapGetters(['getUserid', 'getSubid'])
   },
-  mounted() {
-
-    if(window.plus){
-    　this.plusReady();
-    }else{
-    　　document.addEventListener("plusready",this.plusReady,false);
-    }
-
-  },
   methods: {
-    // app设备绑定
-    plusReady() {
-      // 设置系统状态栏背景为红色/文字为黑色
-    　plus.navigator.setStatusBarBackground( "#ffffff" );
-      plus.navigator.setStatusBarStyle('dark');
-      let navH = plus.navigator.getStatusbarHeight();
-
-      // 获取 APP 终端标识
-      let pinf = plus.push.getClientInfo();  
-      let cid = pinf.clientid;//客户端标识 
-      alert('cid' +":"+ cid)
-      
-      if(window.webkit) {
-        this.platform = '2'
-      }else {
-        this.platform = '1'
-      }
-      this.$axios({
-        method: 'post',
-        url: '/index.php/Apppush/register',
-        data: {
-          uid: this.getUserid,
-          sub_uid: this.getSubid,
-          partform: 'getui',
-          platform: this.platform,
-          device_id: cid
-        }
-      }).then((res) => {
-        alert(res.data.msg)
-      }).catch((res) => {
-        alert(res.data.msg)
-      })
-
-    },
     closeOverlay() {
       this.$store.commit('handleOverlay', false)
       this.$store.commit('handleAddress', false)

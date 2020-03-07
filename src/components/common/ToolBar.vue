@@ -50,7 +50,12 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['isComponent', 'token'])
+		...mapState(['isComponent', 'token', 'nickname', 'monitorQuery', 'warnQuery'])
+	},
+	watch: {
+		nickname(val) {
+			this.active = 1
+		}
 	},
 	mounted() {
 		this.$nextTick(() => {
@@ -71,6 +76,8 @@ export default {
 					document.addEventListener('plusready', this.plusReady, false)
 				}
 			}else if(index === 1) {
+				this.monitorQuery.page = 1
+				this.warnQuery.page = 1
 				// this.componentName = "message"
 				this.$router.push('/message')
 				if(window.plus) {
@@ -79,6 +86,7 @@ export default {
 					document.addEventListener('plusready', this.plusReady, false)
 				}
 			}else if(index === 2) {
+				this.monitorQuery.page = 1
 				// this.componentName = 'city';
 				this.$router.push('/city')
 				this.$store.commit('handleHoneTabsName', '城市舆情')
@@ -88,6 +96,7 @@ export default {
 					document.addEventListener('plusready', this.plusReady, false)
 				}
 			}else if(index === 3) {
+				this.monitorQuery.page = 1
 				// this.componentName = 'mine'
 				this.$router.push('/mine')
 				if(window.plus) {
@@ -98,6 +107,8 @@ export default {
 			}
 			// this.$emit('onChangeBar', this.componentName)
 			this.$store.commit('handleComponent', this.componentName)
+			this.$store.commit('handleCheckboxCenter', false)
+			this.$store.commit('handleCheckboxCity', false)
 		},
 		plusReady() {
 			plus.navigator.setStatusBarBackground('#ffffff');

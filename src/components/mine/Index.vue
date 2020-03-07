@@ -1,9 +1,10 @@
 <template>
 	<div class="mine">
-		<div class="title">
+		<div class="title" :style="{ paddingTop: paddingTT + 'px' }">
 			<div class="left">
-				<h5>{{ this.$store.getters.getNickname }}</h5>
-				<p>{{ this.$store.getters.getCompany }}</p>
+				<h5 v-if="getSubName">{{ getSubName }}</h5>
+				<h5 v-else>{{ getNickname }}</h5>
+				<p>{{ getCompany }}</p>
 			</div>
 			<div class="right">{{ this.$store.getters.getNickname.slice(0, 1) }}</div>
 		</div>
@@ -51,7 +52,7 @@
 
 <script>
 import { Dialog, Toast } from 'vant';
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 import Collection from '@c/mine/Collection';
 import Report from '@c/mine/Report';
 export default {
@@ -62,10 +63,12 @@ export default {
 	},
 	inject: ['reload'],
 	computed: {
-		...mapState(['nickname', 'company_name'])
+		...mapState(['nickname', 'company_name', 'paddingTT', 'clientID']),
+		...mapGetters(['getNickname', 'getCompany', 'getSubName', 'getSubid', 'getUserid'])
 	},
 	data() {
 		return {
+			platform: '',
 			reportToggle: false,
 			collToggle: false,
 			list: [{
@@ -97,6 +100,7 @@ export default {
 	},
 	methods: {
 		onClickClose() {
+			this.$store.commit('handleCheckboxColl', false)
 			if(window.plus) {
 				this.plusReady2()
 			}else {
@@ -114,29 +118,57 @@ export default {
 		handleClick(type) {
 			let self = this
 			if(type === 'C') {
+
+				if(window.webkit) {
+        	this.platform = '2'
+	      }else {
+	        this.platform = '1'
+	      }
+
 				Dialog.confirm({
 					message: '确定退出？',
 					confirmButtonText: '退出',
 					className: 'dialogtext'
 				}).then(() => {
-					Toast.success({
-						message: '退出成功！',
-						duration: 1000
+
+					this.$axios({
+						method: "post",
+		        url: "/index.php/Apppush/unregister",
+		        data: {
+		          uid: this.getUserid,
+		          sub_uid: this.getSubid,
+		          partform: 'getui',
+		          platform: this.platform,
+		          device_id: this.clientID
+		        }
+					}).then((res) => {
+						if(res.data.status == '1') {
+							Toast.success({
+								message: '退出成功！',
+								duration: 1000
+							})
+							setTimeout(() => {
+								let storage = window.localStorage
+								storage.clear()
+
+								this.$store.state.userid = ''
+								this.$store.state.sub_uid = ''
+								this.$store.state.nickname = ''
+								this.$store.state.company_short_name = ''
+								this.$store.commit('handleHomeToggle', false)
+								this.$store.commit('handleToolbar', false)
+								this.$store.commit('handleSubName', false)
+
+								this.$router.push('/')
+								
+							}, 1500)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch(() => {
+						Toast.fail('请检查网络是否连接！')
 					})
-					setTimeout(() => {
-						localStorage.removeItem('token')
-						localStorage.removeItem('userid')
-						localStorage.removeItem('subid')
-						localStorage.removeItem('nickname')
-						localStorage.removeItem('company_name')
-						localStorage.removeItem('company_short_name')
-						this.$router.push('/')
-						this.$store.commit('handleToolbar', false)
-					}, 1500)
-					// this.reload()
-					// this.$store.commit('handleLogin', true)
-				}).catch(() => {
-					console.log('取消退出')
+
 				})
 			}else if(type === 'B') {
 				this.collToggle = true
@@ -162,7 +194,8 @@ export default {
 @import '@css/constants.scss';
 .mine {
 	.title {
-		padding: px2rem(80) px2rem(20);
+		height: px2rem(200);
+		padding: 0 px2rem(20);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;

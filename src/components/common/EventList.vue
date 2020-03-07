@@ -11,6 +11,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import { Toast } from 'vant';
 export default {
 	name: 'event-list',
 	props: {
@@ -19,7 +20,8 @@ export default {
 			default: ''
 		},
 		eid: String,
-		aid: [ String, Number ]
+		aid: [ String, Number ],
+		areaid: [ String, Number ],
 	},
 	data() {
 		return {
@@ -54,6 +56,12 @@ export default {
 	},
 	methods: {
 		getCity() {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.$axios({
 				method: 'post',
 				url: '/index.php/City/context',
@@ -61,7 +69,7 @@ export default {
 					uid: this.getUserid,
 					sub_uid: this.getSubid,
 					event_id: this.eid,
-					areaid: this.aid
+					areaid: this.areaid
 				}
 			}).then((res) => {
 				if(res.data.status == '1') {
@@ -69,11 +77,19 @@ export default {
 				}else {
 					Toast.fail(res.data.msg)
 				}
+				Toast.clear()
 			}).catch((res) => {
-				Toast.fail(res.data.msg)
+				Toast.fail('暂无数据')
+				this.$emit('backHandle')
 			})
 		},
 		getCenter() {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.$axios({
 				method: 'post',
 				url: '/index.php/Monitor/context',
@@ -82,7 +98,7 @@ export default {
 					sub_uid: this.getSubid,
 					fid: this.fid,
 					event_id: this.eid,
-					areaid: this.aid
+					areaid: this.areaid
 				}
 			}).then((res) => {
 				if(res.data.status == '1') {
@@ -90,8 +106,9 @@ export default {
 				}else {
 					Toast.fail(res.data.msg)
 				}
+				Toast.clear()
 			}).catch((res) => {
-				Toast.fail(res.data.msg)
+				Toast.fail('暂无数据')
 			})
 		}
 	}

@@ -1,5 +1,5 @@
 <template>
-	<div class="mine-wrap">
+	<div class="mine-wrap" v-if="homeToggle">
 		<!-- <report v-if="mesType == 'A'"></report> -->
 		<!-- <collection v-else-if="mesType == 'B'"></collection> -->
 		<mine-index></mine-index>
@@ -23,7 +23,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['mesType'])
+		...mapState(['mesType', 'paddingTT', 'homeToggle'])
 	},
 	activated() {
 		if(window.plus) {

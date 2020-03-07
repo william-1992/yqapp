@@ -22,7 +22,7 @@
 			</p>
 		</div>
 
-		<warn-list v-if="warnToggle" :pageType="false"></warn-list>
+		<warn-list v-if="warnToggle" :pageType="false" :finishtype="finishType"></warn-list>
 	</div>
 </template>
 
@@ -37,22 +37,31 @@ export default {
 	},
 	data() {
 		return {
+			finishType: false,
 			warnToggle: false,
 			activeyu: 0,
-			list: [],
+			list: [{
+				title: '全部',
+				id: '0'
+			}],
 			tabs2: [{
 				id: '1',
 				title: '最新',
-				class: ''
+				class: 'active'
 			}, {
 				id: '2',
 				title: '最紧急',
-				class: 'active'
+				class: ''
 			}]		
 		}
 	},
 	mounted() {
-		this.getPlanList()
+		this.$nextTick(() => {
+			setTimeout(() => {
+				this.getPlanList()
+				this.$store.state.warnQuery.page = 1
+			}, 500)
+		})
 	},
 	computed: {
 		...mapState(['warnQuery']),
@@ -67,6 +76,7 @@ export default {
 				duration: 0
 			})
 			this.$store.state.warnQuery.fid = this.list[val].id
+			this.$store.state.warnQuery.page = 1
 
 			this.$axios({
 				method: 'post',
@@ -79,8 +89,10 @@ export default {
 						item.words = item.words.split('+')
 					})
 					this.$store.commit('handleWarnList', list)
+					this.finishType = false
 				}else {
 					this.$store.commit('handleWarnList', [])
+					this.finishType = true
 				}
 				Toast.clear()
 			}).catch((res) => {
@@ -98,14 +110,13 @@ export default {
 					sub_uid: this.getSubid
 				}
 			}).then((res) => {
-				this.list = res.data.data
-				this.$store.state.warnQuery.fid = res.data.data[0].id
+				this.list = this.list.concat(res.data.data)
+				// this.$store.state.warnQuery.fid = res.data.data[0].id
 				this.warnToggle = true
 			}).catch((res) => {
-				Toast.fail('方案获取失败')
 				setTimeout(() => {
 					this.getPlanList()
-				})
+				}, 500)
 			})
 		},
 		onClickTabs2(index) {
@@ -119,7 +130,8 @@ export default {
 				item.class = ''
 			})
 			this.tabs2[index].class = 'active'
-			index == 1 ? this.$store.state.warnQuery.sort_type = 'recent' : this.$store.state.warnQuery.sort_type = 'urgent'
+			this.warnQuery.page = 1
+			index == 1 ? this.$store.state.warnQuery.sort_type = 'urgent' : this.$store.state.warnQuery.sort_type = 'recent'
 			this.$axios({
 				method: 'post',
 				url: '/index.php/Warning/getDataList',
@@ -131,10 +143,11 @@ export default {
 						item.words = item.words.split('+')
 					})
 					this.$store.commit('handleWarnList', list)
-					Toast.clear()
+					
 				}else {
-					Toast.fail(res.data.msg)
+					// Toast.fail(res.data.msg)
 				}
+				Toast.clear()
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})

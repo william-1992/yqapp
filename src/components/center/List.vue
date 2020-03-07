@@ -1,5 +1,5 @@
 <template>
-	<div class="list" :style="{ paddingTop: paddingTT + 'px' }">
+	<div class="list">
 
 		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
 
@@ -58,7 +58,7 @@
 								首次收录： {{item.addtimeStr}}
 							</div>
 						</div>
-						<div class="desc" @click="openDetail(item.id, item.event_id)">
+						<div class="desc" @click="openDetail(item.id, item.event_id, item.is_favo)">
 							<p>{{item.event_title | textLength}}</p>
 						</div>
 						<div class="tags">
@@ -73,7 +73,11 @@
 						<van-button type="default" @click="onClickOnePush(item.id, item.event_id, item.event_url)">
 							<i class="iconfont">&#xe623;</i><span>推送</span>
 						</van-button>
-						<van-button type="default" @click="onClickOneStore(item.id, item.event_id)">
+						<van-button type="default" @click="onClicknotStore(item.id, item.event_id)" v-if="item.is_favo">
+							<i class="iconfont">&#xe6e7;</i>
+							<span>取消收藏</span>
+						</van-button>
+						<van-button type="default" @click="onClickOneStore(item.id, item.event_id)" v-else>
 							<i class="iconfont">&#xe6e7;</i>
 							<span>收藏</span>
 						</van-button>
@@ -98,11 +102,18 @@
 
 		<van-popup v-model="showDetailToggle" closeable close-icon="arrow-left" close-icon-position="top-left" position="right"
 		 :overlay="false" :style="{ height: '100%', width: '100%' }">
-			<detail :eventid="eventId" :detailid="detailId" :pageType="'monitor'" @backHandle="detailClose" :fid="fidd"></detail>
+			<detail :eventid="eventId" :detailid="detailId" :pageType="'monitor'" :fid="fidd" :isfavo="isFavo" @backHandle="detailClose"></detail>
 		</van-popup>
 
-		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list :eid="event_id" :aid="area_id" :fid="fidd"></event-list>
+		<van-popup 
+			v-model="showLinkEventToggle" 
+			position="bottom" 
+			:style="{ height: '80%' }" 
+			get-container="body"
+			closeable 
+			close-icon-position="top-left"
+		>
+			<event-list :eid="event_id" :areaid="area_id" :fid="fidd" @backHandle="eventClose"></event-list>
 		</van-popup>
 
 		<!-- 去推送 -->
@@ -143,6 +154,7 @@
 		},
 		data() {
 			return {
+				isFavo: '',
 				isLoading: false,
 				detail_url: '',
 				linkToggle: false,
@@ -201,7 +213,7 @@
 								item.wordStr = item.wordStr.split('+')
 							})
 							this.$store.commit('handleMonitorList', list)
-							this.$store.state.monitorQuery.page = 1
+							this.$store.state.monitorQuery.page = 2
 							// this.page++
 						}
 						if(list.length == 0){
@@ -230,7 +242,7 @@
 				}
 			},
 			nameLength(val) {
-				if(val.length > 10) {
+				if(val && val.length > 10) {
 					return val.slice(0, 10) + '...'
 				}else {
 					return val
@@ -243,25 +255,42 @@
 			})
 		},
 		methods: {
+			eventClose() {
+				this.showLinkEventToggle = false
+			},
 			onRefresh() {
 				setTimeout(() => {
+					this.allchecked = false
 					this.$store.commit('handleMonitorList', [])
 					this.$toast('刷新成功');
 					this.getESearch()
-					this.$store.state.monitorQuery.page = 0
+					this.$store.state.monitorQuery.page = 1
         	this.isLoading = false;
         	// this.count++;
 				}, 500)
 			},
 			closePush() {
 				this.pushToggle = false
+				this.$store.commit('handleCheckboxCenter', false)
 			},
-			detailClose() {
-				this.showDetailToggle = false
+			detailClose(id) {
+				console.log('center' +":"+ id)
+				for(let i=0; i<this.monitorEventList.length; i++) {
+					if(this.monitorEventList[i].event_id == id) {
+						if(this.monitorEventList[i].is_favo == 1) {
+							this.monitorEventList[i].is_favo = 0
+							this.isFavo = 0
+						}else {
+							this.monitorEventList[i].is_favo = 1
+							this.isFavo = 1
+						}
+					}
+				}
+				// this.showDetailToggle = false
 			},
 			onClickOneDelete(id, eid) {
 				Dialog.confirm({
-					message: '确定删除该条信息？'
+					message: '确定删除该条信息？\n（收藏与消息，同时删除）'
 				}).then(() => {
 					this.$axios({
 						method: 'post',
@@ -273,10 +302,45 @@
 							event_idlist: [eid]
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-
+						if(res.data.status == '1') {
+							Toast.success(res.data.msg)
+							for(let i=0; i<this.monitorEventList.length; i++) {
+								if(this.monitorEventList[i].event_id == eid) {
+									this.monitorEventList.splice(i, 1)
+								}
+							}
+						}else {
+							Toast.fail(res.data.msg)
+						}
 					}).catch((res) => {
-						Toast.fail(res.data.msg)
+						Toast.fail('操作失败，请重试！')
+					})
+				})
+			},
+			onClicknotStore(id, eid) {
+				Dialog.confirm({
+					message: '确定取消收藏该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.getUserid,
+							main_id: [eid]
+						}
+					}).then((res) => {
+						if(res.data.status == '1') {
+							for(let i=0; i<this.monitorEventList.length; i++) {
+								if(this.monitorEventList[i].event_id == eid) {
+									this.monitorEventList[i].is_favo = 0
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
 					})
 				})
 			},
@@ -297,11 +361,16 @@
 					}).then((res) => {
 						if(res.data.status == '1') {
 							Toast.success(res.data.msg)
+							for(let i=0; i<this.monitorEventList.length; i++) {
+								if(this.monitorEventList[i].event_id == eid) {
+									this.monitorEventList[i].is_favo = 1
+								}
+							}
 						}else {
 							Toast.fail(res.data.msg)
 						}
 					}).catch((res) => {
-						Toast.fail(res.data.msg)
+						Toast.fail('数据异常')
 					})
 				})
 			},
@@ -376,10 +445,11 @@
 					// this.loading = false;
 				}, 1500);
 			},
-			openDetail(id, eid) {
+			openDetail(id, eid, isfavo) {
 				this.detailId = id
 				this.eventId = eid
 				this.showDetailToggle = true
+				this.isFavo = isfavo
 			},
 			onLinkEvent(aid, eid) {
 				this.area_id = aid
@@ -421,7 +491,7 @@
 				}
 				if (arr.length > 0) {
 					Dialog.confirm({
-						message: '确认删除？'
+						message: '确认删除？\n（收藏与消息，同时删除）'
 					}).then(() => {
 						this.$axios({
 							method: 'post',
@@ -433,11 +503,19 @@
 								event_idlist: arr
 							}
 						}).then((res) => {
+							// for(let i=0; i<this.monitorEventList.length; i++) {
+							// 	if(this.monitorEventList[i].checked) {
+							// 		this.monitorEventList.splice(i, 1)
+							// 	}
+							// }
 							for(let i=0; i<this.monitorEventList.length; i++) {
-								if(this.monitorEventList[i].checked) {
-									this.monitorEventList(i, 1)
+								for(let j=0; j<arr.length; j++) {
+									if(this.monitorEventList[i].id == arr[j]) {
+										this.monitorEventList.splice(i, 1)
+									}
 								}
 							}
+							this.$store.commit('handleCheckboxCenter', false)
 							Toast.success(res.data.msg)
 						}).catch((res) => {
 							Toast.fail(res.data.msg)
@@ -464,7 +542,7 @@
 		left: 0;
 		right: 0;
 		bottom: px2rem(25);
-		top: px2rem(120);
+		top: px2rem(120 + $paddingT);
 		overflow: auto;
 		.van-popup {
 			overflow: hidden;

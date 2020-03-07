@@ -18,7 +18,7 @@
 
 <script>
 import { Toast } from 'vant';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import Search from '@c/common/Search';
 import Hottest from '@c/common/Hottest';
 import TextList from '@c/center/List';
@@ -42,6 +42,15 @@ export default {
 			this.$store.state.fid = this.flist[index].id
 			this.fidd = this.flist[index].id
 			this.$store.state.monitorQuery.fid = this.fidd
+			this.$store.state.monitorQuery.page = 1
+			let len = this.flist[index].area_list.length
+			if(len > 1) {
+				this.$store.commit('handleArealist', this.flist[index].area_list)
+				this.$store.commit('handleAddressName', {name: '全部', id: 0})
+			}else {
+				this.$store.commit('handleAddressName', this.flist[index].area_list[0])
+				this.$store.commit('handleArealist', [])
+			}
 		} 
 	},
 	mounted() {
@@ -50,6 +59,7 @@ export default {
 		})
 	},
 	computed: {
+		...mapState(['paddingTT']),
 		...mapGetters(['getUserid', 'getSubid'])
 	},
 	methods: {
@@ -70,6 +80,14 @@ export default {
 					this.fidd = res.data.data[0].id
 					this.$store.state.fid = res.data.data[0].id
 					this.$store.state.monitorQuery.fid = res.data.data[0].id
+					let info2 = res.data.data[0].area_list
+					if(info2.length > 1) {
+						this.$store.commit('handleArealist', info2)
+						this.$store.commit('handleAddressName', {name: '全部', id: 0})
+					}else {
+						this.$store.commit('handleAddressName', info2[0])
+						this.$store.commit('handleArealist', [])
+					}
 				}else {
 					Toast.fail(res.data.msg)
 				}

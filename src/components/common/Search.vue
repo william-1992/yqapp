@@ -154,7 +154,9 @@ export default {
 				this.getCity()
 			}
 			if(this.historylist.length > 0) {
-				this.historylist.unshift(this.value)
+				if(this.historylist.indexOf(this.value) == -1) {
+					this.historylist.unshift(this.value)
+				}
 			}else {
 				this.historylist.push(this.value)
 			}

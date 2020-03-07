@@ -2,17 +2,23 @@
   <div id="app">
     <router-view v-if="reload" />
     <tool-bar v-show="toolbarToggle"></tool-bar>
+
+    
+
   </div>
 </template>
 
 <script>
-import { Toast } from 'vant';
+import Clipboard from 'clipboard';
+import { Toast, Dialog } from 'vant';
 import{ mapGetters, mapState } from 'vuex';
 import crypto from '@js/crypto.js';
 import ToolBar from '@c/common/ToolBar';
 export default {
 	data() {
 		return {
+			linkurl: 'http://yq.wisedata.cc/index.php/Ps/downloadApp.html',
+			numbers: 0,
 			isReload: true,
 			arrtry: [1,2,3,4,5,4,3,2,1,12,23,56,32],
 			arrend: [],
@@ -33,22 +39,6 @@ export default {
 	},
 	mounted() {
 
-		let a = crypto.encrypt('欢迎登陆', 'hAw6eqnFLKxpsDv3');
-		let b = crypto.decrypt(a, 'hAw6eqnFLKxpsDv3');
-		// console.log('加密后：' + a)
-		// console.log('解密后：' + b)
-		this.arrend = this.unique(this.arrtry)
-
-
-
-		document.addEventListener('background', () => {
-			alert('监听1' +":"+ plus.navigator.isBackground)
-		}, false)
-
-		document.addEventListener('popstate', () => {
-			alert('监听2' +":"+ '退出程序')
-		}, false)
-
 		// 推送消息触发事件
 		document.addEventListener("plusready",() => {
 			plus.push.addEventListener('click', (msg) => {
@@ -60,34 +50,48 @@ export default {
       	let str2 = str1.split('}')[0]
       	let str3 = str2.split(',')
       	let objs = {}
+
       	for(let i=0; i<str3.length; i++) {
       		let result = str3[i].split('=')
       		objs[result[0].trim()] = result[1]
       	}
-      	this.$router.push('/message')	
-      	this.$store.commit('handlePushQuery', objs)
-      	// push_event为待办，其它为预警
-      	// push_log_type 1普通 2紧急 3严重   其它：忽略
-      	// fid， event_id, 
-      	// event_push_id 此条推送id
-      	if(objs.type == 'push_event') {
-      		this.$store.commit('handleMessageType', 1)
-      		setTimeout(() => {
-      			this.$router.push('/detail')
-      		}, 1000)
-      	}else {
-      		this.$store.commit('handleMessageType', 0)
-      		setTimeout(() => {
-      			this.$router.push('/detail')
-      		}, 1000)
-      	}
 
+      	let user_id = localStorage.getItem('userid')
+
+      	if(user_id) {
+      		this.$router.push('/message')	
+	      	this.$store.commit('handlePushQuery', objs)
+	      	// push_event为待办，其它为预警
+	      	// push_log_type 1普通 2紧急 3严重   其它：忽略
+	      	// fid， event_id, 
+	      	// event_push_id 此条推送id
+	      	if(objs.type == 'push_event') {
+	      		this.$store.commit('handleMessageType', 1)
+	      		setTimeout(() => {
+	      			this.$router.push('/detail')
+	      		}, 1000)
+	      	}else {
+	      		this.$store.commit('handleMessageType', 0)
+	      		setTimeout(() => {
+	      			this.$router.push('/detail')
+	      		}, 1000)
+	      	}
+      	}else {
+      		Dialog.alert({
+					  message: '未登录用户，请先登录。\n 登录后消息中查看。'
+					}).then(() => {
+					  this.$router.push('/')	
+					})
+      	}
 
       }, false); 
 		},false);
 
+		// 判断有无最新版本需要更新
+		// this.checkVersion()
+
 		// 判断是否自动登录
-		this.reloadLogin()
+		// this.reloadLogin()
 
 		// 系统状态栏背景色和文字颜色初始化
 		if(window.plus){
@@ -98,6 +102,59 @@ export default {
 
 	},
 	methods: {
+		errorCB() {
+			Toast.fail('更新失败')
+		},
+		handelDown() {
+			alert('1233333')
+			plus.runtime.openURL( this.downUrl, errorCB, 'com.syapp.demo' );
+		},
+		checkVersion() {
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Login/checkVersion',
+				data: {
+					version: '1.0.0'
+				}
+			}).then((res) => {
+				if(res.data.status == '1') {
+					if(res.data.data.forceStatus == '1') {
+						this.downUrl = res.data.data.downloadUrl
+						Dialog.confirm({
+							message: '发现新版本',
+							confirmButtonText: '更新'
+						}).then(() => {
+							if(window.plus) {
+								this.handelDown()
+							}else {
+								document.addEventListener('plusready', this.handelDown, false )
+							}
+						})
+					}else if(res.data.data.forceStatus == '2') {
+
+						Dialog.alert({
+							message: '发现新版本',
+							confirmButtonText: '更新',
+							getContainer: 'body'
+						}).then(() => {
+
+							this.$refs.inputurl.select()
+							document.execCommand("copy"); 
+							Toast.success('复制成功，\n请前往浏览器下载此文件')
+
+						})
+
+					}
+				}
+			}).catch(() => {
+				this.numbers ++ 
+				setTimeout(() => {
+					if(this.numbers < 3) {
+						this.checkVersion()
+					}
+				}, 500)
+			})
+		},
 		plusReady() {
 			plus.navigator.setStatusBarBackground('#ffffff');
 			plus.navigator.setStatusBarStyle('dark');
@@ -106,6 +163,7 @@ export default {
 			let getToken = localStorage.getItem('token')
 			if(getToken) {
 				this.reload()
+				this.$store.commit('handleHomeToggle', true)
 				this.$router.push('/message')
 				this.$store.commit('handleToolbar', true)
 

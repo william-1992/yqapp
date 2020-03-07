@@ -13,7 +13,7 @@
 				color="#f7f9fe" 
 				@click="onClickAddress"
 			>
-				{{ pickerName }}<i class="iconfont">&#xe65a;</i>
+				{{ pickerName.name }}<i class="iconfont">&#xe65a;</i>
 			</van-button>
 			<van-button type="primary" size="small" color="#f7f9fe" @click="onClickFilter">筛选<i class="iconfont">&#xe65a;</i></van-button>
 		</div>
@@ -75,7 +75,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['pickerName', 'monitorQuery', 'cityQuery'])
+		...mapState(['pickerName', 'monitorQuery', 'cityQuery', 'areaList'])
 	},
 	methods: {
 		handleClose() {
@@ -117,6 +117,7 @@ export default {
 								item.wordStr = item.wordStr.split('+')
 							})
 							this.$store.commit('handleMonitorList', list)
+							this.$store.state.monitorQuery.page = 2
 						}else {
 							this.$store.commit('handleMonitorList', [])
 						}
@@ -140,6 +141,7 @@ export default {
 						if(res.data.data.eventList.length > 0) {
 							let list = res.data.data.eventList
 							this.$store.commit('handleCityList', list)
+							this.$store.state.cityQuery.page = 2
 						}else {
 							this.$store.commit('handleCityList', [])
 						}

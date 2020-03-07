@@ -20,7 +20,6 @@ Vue.use(Tabbar).use(TabbarItem).use(Tab).use(Tabs).use(Icon).use(NavBar).use(But
 let token = '345RTY555';
 
 
-
 function onprn() {
 	let rand = Math.ceil(Math.random()*99999);
 	let timestamp =  Math.round( (new Date).getTime()/1000 );

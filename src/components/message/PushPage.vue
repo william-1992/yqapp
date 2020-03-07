@@ -1,5 +1,6 @@
 <template>
 	<div class="push-page">
+		<keep-alive>
 		<van-tabs 
 			v-model="activeName" 
 			:line-width="16" 
@@ -17,7 +18,11 @@
 		  <van-tab title="我转发的" name="c">
 			<forward-list v-if="this.pushType == 'c'"></forward-list>
 		  </van-tab>
+		  <van-tab title="我完成的" name="d">
+			<finish-list v-if="this.pushType == 'd'"></finish-list>
+		  </van-tab>
 		</van-tabs>
+		</keep-alive>
 	</div>
 </template>
 
@@ -25,12 +30,14 @@
 import TodoList from '@c/message/TodoList';
 import PushList from '@c/message/PushList';
 import ForwardList from '@c/message/ForwardList';
+import FinishList from '@c/message/FinishList';
 export default {
 	name: 'push-page',
 	components: {
 		TodoList,
 		PushList,
-		ForwardList
+		ForwardList,
+		FinishList
 	},
 	data() {
 		return {
