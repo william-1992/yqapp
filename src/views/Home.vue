@@ -1,15 +1,12 @@
 <template>
   <div class="home">
-
     <div>
     	<!-- <keep-alive>
     		<component :is="isComponent"></component>
     	</keep-alive> -->
 
       <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
-
       <picker></picker>
-      
     </div>
   </div>
 </template>
