@@ -1,5 +1,6 @@
 <template>
 	<div class="hot-test">
+		<!-- <slot></slot> -->
 		<div class="left">
 			<span v-for="(item, index) in list" :key="item.id" :class="item.className" @click="onClickHandle(index, item.id)">
 				{{item.title}}
@@ -47,16 +48,16 @@
 <script>
 import { Toast } from 'vant';
 import { mapState } from 'vuex';
-import TimeFilter from '@c/common/TimeFilter';
-import AreaChooice from '@c/common/AreaList';
+// import TimeFilter from '@c/common/TimeFilter';
+// import AreaChooice from '@c/common/AreaList';
 export default {
 	name: 'hottest',
 	props: {
 		hotType: String
 	},
 	components: {
-		TimeFilter,
-		AreaChooice
+		TimeFilter: () => import('@c/common/TimeFilter'),
+		AreaChooice: () => import('@c/common/AreaList')
 	},
 	data() {
 		return {

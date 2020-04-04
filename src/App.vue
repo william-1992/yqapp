@@ -2,9 +2,6 @@
   <div id="app">
     <router-view v-if="reload" />
     <tool-bar v-show="toolbarToggle"></tool-bar>
-
-    
-
   </div>
 </template>
 

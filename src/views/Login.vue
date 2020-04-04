@@ -44,6 +44,11 @@ export default {
   computed: {
 	...mapState(['nickname', 'company_name', 'userid', 'paddingTT'])
   },
+  beforeRouteLeave(to, from, next) {
+    // console.log(to);
+
+    next()
+  },
   mounted() {
     this.$nextTick(() => {
       // 判断有无最新版本需要更新
@@ -142,6 +147,11 @@ export default {
       plus.navigator.setStatusBarStyle('dark');
     },
     loginBefore() {
+      // if(this.username == '' || this.password == '') {
+      //   Toast.fail('账号密码不能为空！')
+      // }else {
+      //   this.onLogin()
+      // }
       if(this.loginToggle) {
         if(this.username == '' || this.password == '') {
           Toast.fail('账号密码不能为空！')

@@ -5,6 +5,12 @@ $rootFootSize: 375 / 10;
 	@return $px / $rootFootSize + rem
 }
 
+@mixin textoverflow {
+	overflow: hidden;
+	text-overflow: ellipise;
+	width: 100%;
+}
+
 // 刘海屏顶部top值
 $paddingT: 0;
 

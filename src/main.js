@@ -27,8 +27,8 @@ function onprn() {
 	axios.defaults.baseURL =  process.env.NODE_ENV === 'development' ? "./" : 'http://syapp.wisedata.cc';
 	axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 	axios.defaults.headers.post['X-RAND'] = rand;
-	axios.defaults.headers.post['X-TIMESTAMP'] = timestamp
-	axios.defaults.headers.post['X-SECRET'] = secret
+	axios.defaults.headers.post['X-TIMESTAMP'] = timestamp;
+	axios.defaults.headers.post['X-SECRET'] = secret;
 }
 
 function randTime() {
@@ -45,6 +45,32 @@ axios.defaults.transformRequest = function(data) {
 }
 
 Vue.config.silent = false;
+
+
+
+router.beforeEach((to, from, next)=> {
+	if(to.path == '/message') {
+		next()
+	}else if(to.path == '/home') {
+		next()
+	}else if(to.path == '/monitor') {
+		next()
+	}else if(to.path == '/city') {
+		next()
+	}else if(to.path == '/mine') {
+		next()
+	}else if(to.path == '/detail') {
+		next()
+	}else if(to.path == '/') {
+		next()
+	}else {
+		next({path: '/'})
+	}
+})
+
+router.afterEach((to, from) => {
+	// console.log(to)
+})
 
 new Vue({
   router,

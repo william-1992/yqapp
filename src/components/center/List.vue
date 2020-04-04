@@ -255,6 +255,9 @@
 			})
 		},
 		methods: {
+			childrenfn() {
+				console.log('echo children')
+			},
 			eventClose() {
 				this.showLinkEventToggle = false
 			},

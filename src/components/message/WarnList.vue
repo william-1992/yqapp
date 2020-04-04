@@ -310,7 +310,7 @@
 					data: this.warnQuery
 				}).then((res) => {
 					let list = res.data.data
-					console.log(list.length)
+					// console.log(list.length)
 					if(list.length > 0) {
 						list.forEach((item, index) => {
 							item.words = item.words.split('+')

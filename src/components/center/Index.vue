@@ -11,8 +11,15 @@
 		>
 			<van-tab v-for="item in flist" :title="item.title" :key="item.id"></van-tab>
 		</van-tabs>
-		<hottest hotType="centerpage"></hottest>
-		<text-list :fidd="fidd"/>
+		<hottest hotType="centerpage">
+			<slot>
+				<h1>this is title</h1>
+			</slot>
+			<slot>
+				<h1>this is ftitle</h1>
+			</slot>
+		</hottest>
+		<keep-alive><text-list ref="cenli" :fidd="fidd"/></keep-alive>
 	</div>
 </template>
 
@@ -31,6 +38,7 @@ export default {
 	},
 	data() {
 		return {
+			msg: 'william',
 			active: 0,
 			flist: [],
 			search_val: {},
@@ -57,6 +65,11 @@ export default {
 		this.$nextTick(() => {
 			this.getPlanList()
 		})
+		console.log(this.$children, 'fu')
+		this.$children.forEach((item) => {
+			item.childrenfn()
+		})
+		// this.$refs.cenli.childrenfn()
 	},
 	computed: {
 		...mapState(['paddingTT']),

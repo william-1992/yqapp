@@ -163,7 +163,7 @@
 		</van-dialog>
 
 		<div v-show="false" :data-clipboard-text="linkurl" class="link"><p>复制链接</p></div>
-		<input ref="inputurl" :value="linkurl">
+		<input v-show="false" ref="inputurl" :value="linkurl">
 
 	</div>
 </template>
@@ -366,23 +366,23 @@
 			},
 			onClickFinish(id, fidd) {
 				
-						Dialog.alert({
-							message: '发现新版本',
-							confirmButtonText: '更新',
-							getContainer: 'body'
-						}).then(() => {
+						// Dialog.alert({
+						// 	message: '发现新版本',
+						// 	confirmButtonText: '更新',
+						// 	getContainer: 'body'
+						// }).then(() => {
 							
-							this.$refs.inputurl.select()
-							document.execCommand("copy"); 
-							Toast.success('复制成功，\n请前往浏览器下载此文件')
+						// 	this.$refs.inputurl.select()
+						// 	document.execCommand("copy"); 
+						// 	Toast.success('复制成功，\n请前往浏览器下载此文件')
 
-						})
+						// })
 
 
 				// plus.runtime.openURL( 'www.baidu.com', onClickPush, 'com.syapp.demo' );
-				// this.fidd = fidd
-				// this.pushId = id
-				// this.finishToggle = true
+				this.fidd = fidd
+				this.pushId = id
+				this.finishToggle = true
 			},
 			onClickPush(id, fidd) {
 				this.fidd = fidd

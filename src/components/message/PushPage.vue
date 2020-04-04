@@ -1,6 +1,5 @@
 <template>
 	<div class="push-page">
-		<keep-alive>
 		<van-tabs 
 			v-model="activeName" 
 			:line-width="16" 
@@ -10,19 +9,18 @@
 			animated
 		>
 		  <van-tab title="待办事项" name="a">
-			<todo-list v-if="this.pushType == 'a'"></todo-list>
+			<keep-alive><todo-list v-if="this.pushType == 'a'"></todo-list></keep-alive>
 		  </van-tab>
 		  <van-tab title="我发起的" name="b">
-			<push-list v-if="this.pushType == 'b'"></push-list>
+			<keep-alive><push-list v-if="this.pushType == 'b'"></push-list></keep-alive>
 		  </van-tab>
 		  <van-tab title="我转发的" name="c">
-			<forward-list v-if="this.pushType == 'c'"></forward-list>
+			<keep-alive><forward-list v-if="this.pushType == 'c'"></forward-list></keep-alive>
 		  </van-tab>
 		  <van-tab title="我完成的" name="d">
-			<finish-list v-if="this.pushType == 'd'"></finish-list>
+			<keep-alive><finish-list v-if="this.pushType == 'd'"></finish-list></keep-alive>
 		  </van-tab>
 		</van-tabs>
-		</keep-alive>
 	</div>
 </template>
 
