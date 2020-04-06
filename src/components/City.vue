@@ -1,10 +1,11 @@
 <template>
-	<div class="city">
+	<div class="city" :style="{ paddingTop: paddingTT + 'px' }" v-if="homeToggle">
 		<city-index></city-index>
 	</div>
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import CityIndex from '@c/city/Index';
 export default {
 	name: 'city',
@@ -13,6 +14,9 @@ export default {
 	},
 	components: {
 		CityIndex
+	},
+	computed: {
+		...mapState(['paddingTT', 'homeToggle'])
 	},
 	activated() {
 		if(window.plus) {

@@ -84,13 +84,47 @@
 			}
 		},
 		mounted() {
+			console.log('123')
 			this.showSourceList()
+			if(this.pageType == 'citypage') {
+					for(let i=0; i<this.timelist.length; i++) {
+						this.timelist[i].class = ''
+						this.viewlist[i].class = ''
+					}
+					this.timelist[1].class = 'active'
+					this.viewlist[3].class = 'active'
+				}else {
+					for(let i=0; i<this.timelist.length; i++) {
+						this.timelist[i].class = ''
+						this.viewlist[i].class = ''
+					}
+					this.timelist[0].class = 'active'
+					this.viewlist[0].class = 'active'
+				}
 		},
 		computed: {
 			...mapState(['monitorQuery', 'cityQuery']),
 			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
+			pageType(type) {
+				console.log(type)
+				if(type == 'citypage') {
+					for(let i=0; i<this.timelist.length; i++) {
+						this.timelist[i].class = ''
+						this.viewlist[i].class = ''
+					}
+					this.timelist[1].class = 'active'
+					this.viewlist[3].class = 'active'
+				}else {
+					for(let i=0; i<this.timelist.length; i++) {
+						this.timelist[i].class = ''
+						this.viewlist[i].class = ''
+					}
+					this.timelist[0].class = 'active'
+					this.viewlist[0].class = 'active'
+				}
+			},
 			es_source(val) {
 				if(val == '1') {
 					this.dataTitle = '开始时间'
@@ -148,11 +182,20 @@
 		},
 		methods: {
 			onReset() {
+				// this.source = ''
+				// this.point = ''
+				// this.time = ''
 				this.onClickDate('0')
 				this.onClickView('0')
 				this.onClickSource('', '0')
 			},
 			onClickSure() {
+				Toast.loading({
+					message: '加载中...',
+					forbidClick: true,
+					loadingType: 'spinner',
+					duration: 0
+				})
 				if(this.pageType == 'citypage') {
 					let startTime = ''
 					let endTime = ''
@@ -172,6 +215,7 @@
 								this.$store.commit('handleCityList', [])
 							}
 							this.$emit('closePopup', false)
+							Toast.clear()
 						}else {
 							Toast.fail(res.data.msg)
 						}
@@ -200,6 +244,7 @@
 								this.$store.commit('handleMonitorList', [])
 							}
 							this.$emit('closePopup', false)
+							Toast.clear()
 						}else {
 							Toast.fail(res.data.msg)
 						}
@@ -221,8 +266,8 @@
 				})
 				this.viewlist[index].class = 'active'
 				switch(index) {
-					case 0:
-						this.point = '';
+					case 3:
+						this.point = 'n';
 						break;
 					case 1:
 						this.point = 'p';
@@ -231,12 +276,12 @@
 						this.point = 'm';
 						break;
 					default:
-						this.point = 'n';
+						this.point = '';
 						break;
 				}
 			},
 			onClickDate(index) {
-				if(index === 0) {
+				if(index == 0) {
 					this.time = ''
 				}else if(index == 1) {
 					this.time = 'd'

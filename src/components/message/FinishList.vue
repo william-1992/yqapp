@@ -5,14 +5,14 @@
 
 		<van-list 
 			v-model="loading" 
-			:error-sync="errored"
+			:error.sync="errored"
 			error-text="请求失败，点击重新加载"
 			:finished="finished" 
 			finished-text="没有更多了" 
 			@load="onLoad"
 		>
 
-			<van-swipe-cell v-for="(item, index) in newlist" :key="item.id">
+			<van-swipe-cell v-for="item in newlist" :key="item.id">
 
 				<div class="sign-type sign01" v-if="item.warning_level === '2'"><span>紧急</span></div>
 				<div class="sign-type sign02" v-else-if="item.warning_level === '3'"><span>严重</span></div>
@@ -30,7 +30,7 @@
 						</div>
 					</div>
 					<div class="timer">
-						<div class="timer-left" v-show="item.f_delete !==1">
+						<div class="timer-left" v-show="item.f_delete !==1" >
 							<img v-if="item.site_icon_type == 2" src="../../assets/images/newicon05.png" />
 							<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon01.png" />
 							<img v-else-if="item.site_icon_type == 10" src="../../assets/images/newicon12.png" />
@@ -42,18 +42,18 @@
 							<img v-else-if="item.site_icon_type == 5" src="../../assets/images/newicon08.png" />
 							<img v-else-if="item.site_icon_type == 7" src="../../assets/images/newicon06.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.site_name | textLength }}</span>
+							<span>{{ item.site_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
-							发起时间： {{item.firsttimeStr}}
+							完成时间： {{item.overtimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid, item.is_favo)">
+					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid || 0, item.is_favo)">
 						<p>{{item.title | textLength}}</p>
 					</div>
-					<div class="tags" v-if="item.fid >0">
+					<div class="tags" v-if="item.fid > 0">
 						<h5 v-if="item.f_delete !==1" >监控词组：</h5>
-						<p v-if="item.f_delete !==1">
+						<p v-if="item.f_delete !==1" >
 							<span v-for="(val, index) in item.ewords" :key="index">{{val}}</span>
 						</p>
 					</div>
@@ -62,45 +62,23 @@
 					</div>
 					<!-- 待办事项/我发起的/我转发的 -->
 					<div class="upcome">
-						<div class="upcome-des" v-for="ite in item.logs" :key="ite.id" v-if="ite.type == '1'">
-							<div class="upcome-des-left">
+						<div class="upcome-des" v-for="ite in item.logs" :key="ite.id">
+							<div class="upcome-des-left" v-if="ite.type == '1'">
 								<p>推送人： {{ ite.from_nickname }}</p>
 								<p>留言： {{ ite.remark }}</p>
 							</div>
+							<div class="upcome-des-left" v-else-if="ite.type == '2'">
+								<p>转发人： {{ ite.to_nickname }}</p>
+								<p>留言： {{ ite.remark }}</p>
+							</div>
+							<div class="upcome-des-left" v-else>
+								<p>完成人： {{ ite.to_nickname }}</p>
+								<p>留言： {{ ite.remark }}</p>
+							</div>
 							<div class="upcome-des-right">
-								<img src="@img/speed1.png" v-if="item.is_over == '0'">
-								<img src="@img/speed2.png" v-else>
+								<img src="@img/speed3.png">
 							</div>
 						</div>
-
-						<div class="launch-list">
-							<ul v-if="item.checked">
-								<li v-for="ite in item.logs" :key="ite.id">
-									<div class="launch-time">
-										<h6>{{ ite.add_time | monthfil }}</h6>
-										<p>{{ ite.add_time | datefil }}</p>
-									</div>
-									<div class="launch-line">
-										<van-icon name="circle" />
-										<div class="line1"></div>
-									</div>
-									<div class="launch-des">
-										<h6>{{ ite.from_nickname }}转发给{{ ite.to_nickname }}</h6>
-										<p>留言：{{ ite.remark }}</p>
-									</div>
-									<van-button @click="onClickRemind(ite.id)">催一下</van-button>
-								</li>
-							</ul>
-							<div>
-								<van-button v-if="item.checked" type="primary" size="large" color="#fff" @click.stop="onClickLaunch(2, index)">收起
-									<van-icon name="arrow-up" />
-								</van-button>
-								<van-button v-else type="primary" size="large" color="#fff" @click.stop="onClickLaunch(1, index)">查看详情
-									<van-icon name="arrow-down" />
-								</van-button>
-							</div>
-						</div>
-
 					</div>
 				</div>
 				<!-- </van-cell> -->
@@ -119,6 +97,14 @@
 		</van-list>
 
 		</van-pull-refresh>
+
+		<div class="allSelect" v-show="checkboxToggle">
+			<van-checkbox v-model="allchecked" checked-color="#ff6651">全选</van-checkbox>
+			<div class="btn-wrap">
+				<van-button color="#6f7ea0" plain size="small">删除</van-button>
+				<van-button color="#6f7ea0" size="small">推送</van-button>
+			</div>
+		</div>
 
 		<van-popup 
 			v-model="showDetailToggle" 
@@ -144,34 +130,18 @@
 			<event-list :eventType="'message'" :fid="fidd" :eid="eventId" :aid="pushId" :areaid="areaId"></event-list>
 		</van-popup>
 
-		<!-- 完成点击弹框 -->
-		<van-dialog
-			v-model="remindToggle"
-			title="添加留言"
-			show-cancel-button
-			get-container='body'
-			@confirm="onClickConfirm"
-		>
-			<van-field
-				v-model="message"
-				rows="3"
-				autosize
-				type="textarea"
-				placeholder="请输入留言"
-				show-word-limit
-			></van-field>
-		</van-dialog>
-
 	</div>
 </template>
 
 <script>
-	import { mapState, mapGetters } from 'vuex';
-	import { Dialog, Toast } from 'vant';
+	import {
+		mapState, mapGetters
+	} from 'vuex';
+	import { Toast, Dialog } from 'vant'
 	import Detail from '@c/common/Detail';
 	import EventList from '@c/common/EventList';
 	export default {
-		name: 'push-list',
+		name: 'forward-list',
 		components: {
 			Detail,
 			EventList
@@ -180,10 +150,7 @@
 			return {
 				isFavo: '',
 				areaId: '',
-				logId: '',
-				message: '',
-				remindToggle: false,
-				launchToggle: true,
+				launchToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
 				loading: false,
@@ -192,18 +159,28 @@
 				errored: false,
 				allchecked: false,
 				newlist: [],
-				pushId: '',
 				fidd: '',
 				eventId: '',
-				page: ''
+				pushId: '',
+				page: 0
 			}
 		},
 		computed: {
 			...mapState(['checkboxToggle']),
 			...mapGetters(['getUserid', 'getSubid'])
 		},
-		mounted() {
-			this.getPushList()
+		watch: {
+			allchecked(val) {
+				if (val) {
+					this.newlist.forEach((item) => {
+						item.checked = true
+					})
+				} else {
+					this.newlist.forEach((item) => {
+						item.checked = false
+					})
+				}
+			}
 		},
 		filters: {
 			textLength(val) {
@@ -213,15 +190,6 @@
 					return val
 				}
 			},
-			monthfil(data) {
-				let str = data.split(' ')[0]
-				return str.substring(5, 10)
-
-			},
-			datefil(data) {
-				let str = data.split(' ')[1]
-				return str.substring(0,5)
-			},
 			nameLength(val) {
 				if(val.length > 10) {
 					return val.slice(0, 10) + '...'
@@ -229,6 +197,9 @@
 					return val
 				}
 			}
+		},
+		mounted() {
+			this.getForList()
 		},
 		methods: {
 			detailClose(id) {
@@ -249,32 +220,9 @@
 				setTimeout(() => {
 					this.newlist = []
 					this.$toast('刷新成功');
-        	this.getPushList()
+        	this.getForList()
         	this.page = 0
 				}, 500)
-			},
-			onClickConfirm() {
-				this.$axios({
-					method: 'post',
-					url: '/index.php/Push/remind',
-					data: {
-						uid: this.getUserid,
-						sub_uid: this.getSubid,
-
-						log_id: this.logId,
-						remark: this.message
-					}
-				}).then((res) => {
-					if(res.data.status == '1') {
-						Toast.success(res.data.msg)
-					}else {
-						Toast.fail(res.data.msg)
-					}
-				})
-			},
-			onClickRemind(id) {
-				this.logId = id
-				this.remindToggle = true
 			},
 			onClicknotStore(id, eid) {
 				Dialog.confirm({
@@ -320,12 +268,12 @@
 						}
 					}).then((res) => {
 						if(res.data.status == '1') {
-							Toast.success(res.data.msg)
 							for(let i=0; i<this.newlist.length; i++) {
 								if(this.newlist[i].event_main_id == eid) {
 									this.newlist[i].is_favo = 1
 								}
 							}
+							Toast.success(res.data.msg)
 						}else {
 							Toast.fail(res.data.msg)
 						}
@@ -334,24 +282,18 @@
 					})
 				})
 			},
-			getPushList() {
-				let overtype = 0
+			getForList() {
 				let timetype = 0
-				let lasttime = 0
 				if(this.newlist.length > 0) {
-					overtype = this.newlist[this.newlist.length-1].is_over
-					timetype = this.newlist[this.newlist.length-1].up_time
-					lasttime = this.newlist[this.newlist.length-1].last_op_time
+					timetype = this.newlist[this.newlist.length-1].over_time
 				}
 				this.$axios({
 					method: 'post',
-					url: '/index.php/Push/getMyPushList',
+					url: '/index.php/Push/getMyDoList',
 					data: {
 						uid: this.getUserid,
 						sub_uid: this.getSubid,
-						is_over: overtype,
-						up_time: timetype,
-						last_op_time: lasttime
+						over_time: timetype
 					}
 				}).then((res) => {
 					if(res.data.data.length > 0) {
@@ -378,30 +320,27 @@
 			onLoad() {
 				// 异步更新数据
 				setTimeout(() => {
-					this.getPushList()
+					this.getForList()
 				}, 1500);
 			},
 			openDetail(id, eid, fid, isfavo) {
+				this.pushId = id
 				this.eventId = eid
 				this.fidd = fid
-				this.pushId = id
 				this.isFavo = isfavo
 				this.showDetailToggle = true
 			},
 			onLinkEvent(id, eid, fid) {
+				this.pushId = id
 				this.eventId = eid
 				this.fidd = fid
-				this.pushId = id
 				this.showLinkEventToggle = true
 			},
-			onClickLaunch(type, index) {
-				if(type == '1') {
-					for(let i=0; i<this.newlist.length; i++) {
-						this.newlist[index].checked = false
-					}
-					this.newlist[index].checked = true
-				}else {
-					this.newlist[index].checked = false
+			onClickLaunch(type) {
+				if (type == '1') {
+					this.launchToggle = true
+				} else {
+					this.launchToggle = false
 				}
 			}
 		}
@@ -671,19 +610,6 @@
 					background-color: $bgColor;
 					display: flex;
 
-					&:last-child {
-						.van-button {
-							display: block;
-						}
-					}
-
-					.van-button {
-						display: none;
-						background: none;
-						border: none;
-						color: #ff6651;
-					}
-
 					.launch-time {
 						padding-bottom: px2rem(15);
 						width: px2rem(48);
@@ -721,7 +647,7 @@
 
 					.launch-des {
 						padding-left: px2rem(10);
-						flex: 1;
+
 						h6 {
 							display: flex;
 							justify-content: space-between;

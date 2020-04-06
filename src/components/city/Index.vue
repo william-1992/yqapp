@@ -2,7 +2,7 @@
 	<div class="city-index">
 		<search :pageType="'city'"></search>
 		<hottest hotType="citypage" @get-type="getType"></hottest>
-		<text-list :cityhot="cityHotType"></text-list>
+		<keep-alive><text-list :cityhot="cityHotType"></text-list></keep-alive>
 	</div>
 </template>
 

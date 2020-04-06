@@ -22,32 +22,38 @@ export default new Router({
     {
     	path: '/',
     	name: 'login',
-    	component: Login
+    	component: Login,
+      meta: {title: '登陆页'}
     },
     {
       path: '/monitor',
       name: 'monitor',
-      component: Monitor
+      component: Monitor,
+      meta: {title: '监测'}
     },
     {
       path: '/message',
       name: 'message',
-      component: Message
+      component: Message,
+      meta: {title: '预警'}
     },
     {
       path: '/city',
       name: 'city',
-      component: City
+      component: City,
+      meta: {title: '城市'}
     },
     {
       path: '/mine',
       name: 'mine',
-      component: Mine
+      component: Mine,
+      meta: {title: '个人中心'}
     },
     {
       path: '/detail',
       name: 'detail',
-      component: Detail
+      component: Detail,
+      meta: {title: '详情'}
     }
   ]
 });

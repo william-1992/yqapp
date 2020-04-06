@@ -1,5 +1,6 @@
 <template>
 	<div class="hot-test">
+		<!-- <slot></slot> -->
 		<div class="left">
 			<span v-for="(item, index) in list" :key="item.id" :class="item.className" @click="onClickHandle(index, item.id)">
 				{{item.title}}
@@ -13,7 +14,7 @@
 				color="#f7f9fe" 
 				@click="onClickAddress"
 			>
-				{{ pickerName }}<i class="iconfont">&#xe65a;</i>
+				{{ pickerName.name }}<i class="iconfont">&#xe65a;</i>
 			</van-button>
 			<van-button type="primary" size="small" color="#f7f9fe" @click="onClickFilter">筛选<i class="iconfont">&#xe65a;</i></van-button>
 		</div>
@@ -47,16 +48,16 @@
 <script>
 import { Toast } from 'vant';
 import { mapState } from 'vuex';
-import TimeFilter from '@c/common/TimeFilter';
-import AreaChooice from '@c/common/AreaList';
+// import TimeFilter from '@c/common/TimeFilter';
+// import AreaChooice from '@c/common/AreaList';
 export default {
 	name: 'hottest',
 	props: {
 		hotType: String
 	},
 	components: {
-		TimeFilter,
-		AreaChooice
+		TimeFilter: () => import('@c/common/TimeFilter'),
+		AreaChooice: () => import('@c/common/AreaList')
 	},
 	data() {
 		return {
@@ -75,7 +76,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState(['pickerName', 'monitorQuery', 'cityQuery'])
+		...mapState(['pickerName', 'monitorQuery', 'cityQuery', 'areaList'])
 	},
 	methods: {
 		handleClose() {
@@ -85,6 +86,12 @@ export default {
 			this.show = false
 		},
 		onClickHandle(index, id) {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.list.forEach((item) => {
 				item.className = ''
 			})
@@ -111,9 +118,11 @@ export default {
 								item.wordStr = item.wordStr.split('+')
 							})
 							this.$store.commit('handleMonitorList', list)
+							this.$store.state.monitorQuery.page = 2
 						}else {
 							this.$store.commit('handleMonitorList', [])
 						}
+						Toast.clear()
 					}else {
 						Toast.fail(res.data.msg)
 					}
@@ -133,9 +142,11 @@ export default {
 						if(res.data.data.eventList.length > 0) {
 							let list = res.data.data.eventList
 							this.$store.commit('handleCityList', list)
+							this.$store.state.cityQuery.page = 2
 						}else {
 							this.$store.commit('handleCityList', [])
 						}
+						Toast.clear()
 					}else {
 						Toast.fail(res.data.msg)
 					}

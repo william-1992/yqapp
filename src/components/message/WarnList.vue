@@ -21,17 +21,17 @@
 
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
-					<div class="title">
+					<div class="title" v-if="!item.f_delete">
 						<div class="left">
-							<div class="frie" @click.stop="onLinkEvent(item.id, item.event_main_id, item.fid)">{{ item.docount }}</div>
-							<h2>{{ item.f_title }}</h2>
+							<div class="frie" @click.stop="onLinkEvent(item.id, item.event_id, item.fid || 0, item.areaid)">{{ item.docount }}</div>
+							<h2>{{ item.f_title  }}</h2>
 						</div>
-						<div class="right">
+						<!-- <div class="right">
 							{{item.event_uptime}}前更新
-						</div>
+						</div> -->
 					</div>
 					<div class="timer">
-						<div class="timer-left">
+						<div class="timer-left" v-if="!item.f_delete">
 							<img v-if="item.show_icon_type == 2" src="../../assets/images/newicon05.png" />
 							<img v-else-if="item.show_icon_type == 11" src="../../assets/images/newicon01.png" />
 							<img v-else-if="item.show_icon_type == 10" src="../../assets/images/newicon12.png" />
@@ -43,16 +43,16 @@
 							<img v-else-if="item.show_icon_type == 5" src="../../assets/images/newicon08.png" />
 							<img v-else-if="item.show_icon_type == 7" src="../../assets/images/newicon06.png" />
 							<img v-else src="../../assets/images/newicon11.png" />
-							<span>{{ item.show_name | nameLength }}</span>
+							<span v-if="item.show_name">{{ item.show_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
-							首次收录： {{item.pubtimeStr}}
+							预警时间： {{ item.qa_datetime }}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid)">
-						<p>{{item.title}}</p>
+					<div class="desc" @click="openDetail(item.id, item.event_id, item.fid, item.is_favo)">
+						<p>{{ item.title | textLength }}</p>
 					</div>
-					<div class="tags">
+					<div class="tags" v-if="item.f_delete !== 1">
 						<h5>监控词组：</h5>
 						<p>
 							<span v-for="(val, index) in item.words" :key="index">{{val}}</span>
@@ -65,7 +65,10 @@
 					<van-button type="default" @click="onClickOnePush(item.id, item.event_id, item.fid, item.url)">
 						<i class="iconfont">&#xe623;</i><span>推送</span>
 					</van-button>
-					<van-button type="default" @click="onClickOneStore(item.id, item.event_id, item.fid)">
+					<van-button type="default" @click="onClicknotStore(item.id, item.event_id)" v-if="item.is_favo">
+						<i class="iconfont">&#xe6e7;</i><span>取消收藏</span>
+					</van-button>
+					<van-button type="default" @click="onClickOneStore(item.id, item.event_id, item.fid)" v-else>
 						<i class="iconfont">&#xe6e7;</i><span>收藏</span>
 					</van-button>
 				</template>
@@ -74,6 +77,7 @@
 		</van-list>
 
 		</van-pull-refresh>
+
 
 		<van-popup 
 			v-model="showDetailToggle" 
@@ -85,15 +89,22 @@
 		 	:overlay="false" 
 		 	:style="{ height: '100%', width: '100%' }"
 		 >
-			<detail :deletebtn="false" :detailid="detailId" :eventid="eventId" :fid="fidd" ></detail>
+			<detail :deletebtn="false" :detailid="detailId" :eventid="eventId" :fid="fidd" :isfavo="isFavo" @backHandle="detailClose"></detail>
 		</van-popup>
 
-		<van-popup v-model="showLinkEventToggle" position="bottom" :style="{ height: '80%' }" closeable close-icon-position="top-left">
-			<event-list :eventType="'message'" :aid="detailId" :eid="eventId" :fid="fidd"></event-list>
+		<van-popup 
+			v-model="showLinkEventToggle" 
+			position="bottom" 
+			:style="{ height: '80%' }" 
+			get-container="body"
+			closeable 
+			close-icon-position="top-left"
+		>
+			<event-list :eventType="'message'" :aid="detailId" :eid="eventId" :fid="fidd" :areaid="areaId"></event-list>
 		</van-popup>
 
 		<!-- 去推送 -->
-		<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%'}">
+		<van-popup v-model="pushToggle" position='bottom' :style="{height: '23%', width: '100%'}" get-container="body">
 			<push-to 
 				@closeThis="closePush" 
 				:idlist="[...detailId]" 
@@ -118,7 +129,8 @@
 	export default {
 		name: 'warn-list',
 		props: {
-			pushType: String
+			pushType: String,
+			finishtype: Boolean
 		},
 		components: {
 			Detail,
@@ -127,6 +139,8 @@
 		},
 		data() {
 			return {
+				isFavo: '',
+				areaId: '',
 				detailId: '',
 				eventId: '',
 				fidd: '',
@@ -149,9 +163,12 @@
 			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
+			finishtype(type) {
+					this.finished = type
+			},
 			warnEventList(data) {
 				if(data.length == 0) {
-					this.finished = true
+					// this.finished = true
 				}
 			},
 			allchecked(val) {
@@ -167,6 +184,13 @@
 			}
 		},
 		filters: {
+			textLength(val) {
+				if(val.length > 40) {
+					return val.slice(0, 38) + '...'
+				}else {
+					return val
+				}
+			},
 			nameLength(val) {
 				if(val.length > 10) {
 					return val.slice(0, 10) + '...'
@@ -183,17 +207,59 @@
 				duration: 0
 			})
 			this.$nextTick(() => {
+				this.$store.commit('handleWarnList', [])
 				this.getList()
 			})
 		},
 		methods: {
+			detailClose(id) {
+				for(let i=0; i<this.warnEventList.length; i++) {
+					if(this.warnEventList[i].event_id == id) {
+						if(this.warnEventList[i].is_favo == 1) {
+							this.warnEventList[i].is_favo = 0
+							this.isFavo = 0
+						}else {
+							this.warnEventList[i].is_favo = 1
+							this.isFavo = 1
+						}
+					}
+				}
+				// this.showDetailToggle = false
+			},
 			onRefresh() {
 				setTimeout(() => {
 					this.$store.commit('handleWarnList', [])
 					this.$toast('刷新成功');
+        	this.warnQuery.page = 1
         	this.getList()
-        	this.$store.state.warnQuery.page = 0
 				}, 500)
+			},
+			onClicknotStore(id, eid) {
+				Dialog.confirm({
+					message: '确定取消收藏该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.getUserid,
+							main_id: [eid]
+						}
+					}).then((res) => {
+						if(res.data.status == '1') {
+							for(let i=0; i<this.warnEventList.length; i++) {
+								if(this.warnEventList[i].event_id == eid) {
+									this.warnEventList[i].is_favo = 0
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
+					})
+				})
 			},
 			onClickOneStore(id, eid, fid) {
 				Dialog.confirm({
@@ -210,10 +276,18 @@
 							event_id: eid
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-
+						if(res.data.status == '1') {
+							Toast.success(res.data.msg)
+							for(let i=0; i<this.warnEventList.length; i++) {
+								if(this.warnEventList[i].event_id == eid) {
+									this.warnEventList[i].is_favo = 1
+								}
+							}
+						}else {
+							Toast.fail(res.data.msg)
+						}
 					}).catch((res) => {
-						Toast.fail(res.data.msg)
+						Toast.fail('数据异常')
 					})
 				}).catch(() => {
 
@@ -236,6 +310,7 @@
 					data: this.warnQuery
 				}).then((res) => {
 					let list = res.data.data
+					// console.log(list.length)
 					if(list.length > 0) {
 						list.forEach((item, index) => {
 							item.words = item.words.split('+')
@@ -262,19 +337,44 @@
 			onLoad() {
 				// 异步更新数据
 				setTimeout(() => {
-					this.getList()
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Warning/getDataList',
+						data: this.warnQuery
+					}).then((res) => {
+						let list = res.data.data
+						if(list.length > 0) {
+							list.forEach((item, index) => {
+								item.words = item.words.split('+')
+							})
+							this.$store.commit('handleWarnList', this.warnEventList.concat(list))
+
+							this.$store.state.warnQuery.page = this.$store.state.warnQuery.page + 1
+						}else {
+							this.finished = true
+						}
+						this.loading = false
+						this.isLoading = false
+						Toast.clear()
+					}).catch((res) => {
+						this.loading = false
+						this.errored = true
+						Toast.fail(res.data.msg)
+					})
 				}, 500);
 			},
-			openDetail(id, eid, fid) {
+			openDetail(id, eid, fid, isfavo) {
 				this.detailId = id
 				this.eventId = eid
 				this.fidd = fid
+				this.isFavo = isfavo
 				this.showDetailToggle = true
 			},
-			onLinkEvent(id, eid, fid) {
+			onLinkEvent(id, eid, fid, areaid) {
 				this.detailId = id
 				this.eventId = eid
 				this.fidd = fid
+				this.areaId = areaid
 				this.showLinkEventToggle = true
 			},
 			onClickLaunch(type) {
@@ -295,7 +395,6 @@
 		border-top: 1px solid $borderColor;
 		padding-bottom: px2rem(50);
 		font-size: 15px;
-
 		.van-popup {
 			overflow: hidden;
 		}

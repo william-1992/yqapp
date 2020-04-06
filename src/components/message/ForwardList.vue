@@ -21,8 +21,8 @@
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
 					<div class="title">
-						<div class="left">
-							<div class="frie" @click.stop="onLinkEvent(item.id, item.event_main_id, item.fid || 0)">{{ item.docount }}</div>
+						<div class="left" v-show="item.f_delete !==1">
+							<div class="frie" @click.stop="onLinkEvent(item.id, item.event_main_id, item.fid || 0, item.areaid)">{{ item.docount }}</div>
 							<h2>{{ item.f_title }}</h2>
 						</div>
 						<div class="right">
@@ -30,7 +30,7 @@
 						</div>
 					</div>
 					<div class="timer">
-						<div class="timer-left">
+						<div class="timer-left" v-show="item.f_delete !==1">
 							<img v-if="item.site_icon_type == 2" src="../../assets/images/newicon05.png" />
 							<img v-else-if="item.site_icon_type == 11" src="../../assets/images/newicon01.png" />
 							<img v-else-if="item.site_icon_type == 10" src="../../assets/images/newicon12.png" />
@@ -45,24 +45,31 @@
 							<span>{{ item.site_name | nameLength }}</span>
 						</div>
 						<div class="timer-right">
-							首次收录： {{item.pretimeStr}}
+							转发时间： {{item.addtimeStr}}
 						</div>
 					</div>
-					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid || 0)">
-						<p>{{item.title}}</p>
+					<div class="desc" @click="openDetail(item.id, item.event_main_id, item.fid || 0, item.is_favo)">
+						<p>{{item.title | textLength}}</p>
 					</div>
-					<div class="tags">
-						<h5>监控词组：</h5>
-						<p>
+					<div class="tags" v-if="item.fid >0">
+						<h5 v-if="item.f_delete !==1" >监控词组：</h5>
+						<p v-if="item.f_delete !==1" >
 							<span v-for="(val, index) in item.ewords" :key="index">{{val}}</span>
 						</p>
+					</div>
+					<div class="tags" v-else>
+						<h5>城市舆情</h5>
 					</div>
 					<!-- 待办事项/我发起的/我转发的 -->
 					<div class="upcome">
 						<div class="upcome-des" v-for="ite in item.logs" :key="ite.id">
-							<div class="upcome-des-left">
+							<div class="upcome-des-left" v-if="ite.type == '1'">
 								<p>推送人： {{ ite.from_nickname }}</p>
-								<p>留言： {{ ite.to_nickname }}</p>
+								<p>留言： {{ ite.remark }}</p>
+							</div>
+							<div class="upcome-des-left" v-else>
+								<p>已转发给： {{ ite.to_nickname }}</p>
+								<p>留言： {{ ite.remark }}</p>
 							</div>
 							<div class="upcome-des-right">
 								<img src="@img/speed4.png">
@@ -72,7 +79,11 @@
 				</div>
 				<!-- </van-cell> -->
 				<template slot="right">
-					<van-button type="default" @click="onClickOneStore(item.id, item.event_main_id, item.fid || 0)">
+					<van-button type="default" @click="onClicknotStore(item.id, item.event_main_id, item.fid || 0)" v-if="item.is_favo">
+						<i class="iconfont">&#xe6e7;</i>
+						<span>取消收藏</span>
+					</van-button>
+					<van-button type="default" @click="onClickOneStore(item.id, item.event_main_id, item.fid || 0)" v-else>
 						<i class="iconfont">&#xe6e7;</i>
 						<span>收藏</span>
 					</van-button>
@@ -101,7 +112,7 @@
 		 	:overlay="false" 
 		 	:style="{ height: '100%', width: '100%' }"
 		 >
-			<detail :detailid="pushId" :eventid="eventId" :pageType="'juststore'" :fid="fidd"></detail>
+			<detail :detailid="pushId" :eventid="eventId" :pageType="'juststore'" :fid="fidd" :isfavo="isFavo" @backHandle="detailClose"></detail>
 		</van-popup>
 
 		<van-popup 
@@ -133,6 +144,8 @@
 		},
 		data() {
 			return {
+				isFavo: '',
+				areaId: '',
 				launchToggle: false,
 				showLinkEventToggle: false,
 				showDetailToggle: false,
@@ -166,6 +179,13 @@
 			}
 		},
 		filters: {
+			textLength(val) {
+				if(val.length > 40) {
+					return val.slice(0, 38) + '...'
+				}else {
+					return val
+				}
+			},
 			nameLength(val) {
 				if(val.length > 10) {
 					return val.slice(0, 10) + '...'
@@ -178,6 +198,20 @@
 			this.getForList()
 		},
 		methods: {
+			detailClose(id) {
+				for(let i=0; i<this.newlist.length; i++) {
+					if(this.newlist[i].event_main_id == id) {
+						if(this.newlist[i].is_favo == 1) {
+							this.newlist[i].is_favo = 0
+							this.isFavo = 0
+						}else {
+							this.newlist[i].is_favo = 1
+							this.isFavo = 1
+						}
+					}
+				}
+				// this.showDetailToggle = false
+			},
 			onRefresh() {
 				setTimeout(() => {
 					this.newlist = []
@@ -185,6 +219,33 @@
         	this.getForList()
         	this.page = 0
 				}, 500)
+			},
+			onClicknotStore(id, eid) {
+				Dialog.confirm({
+					message: '确定取消收藏该条信息？'
+				}).then(() => {
+					this.$axios({
+						method: 'post',
+						url: '/index.php/Favo/doDel',
+						data: {
+							uid: this.getUserid,
+							main_id: [eid]
+						}
+					}).then((res) => {
+						if(res.data.status == '1') {
+							for(let i=0; i<this.newlist.length; i++) {
+								if(this.newlist[i].event_main_id == eid) {
+									this.newlist[i].is_favo = 0
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
+					})
+				})
 			},
 			onClickOneStore(id, eid, fidd) {
 				this.fidd = fidd
@@ -195,19 +256,26 @@
 						method: 'post',
 						url: '/index.php/City/favorite',
 						data: {
+							fid: fidd,
 							uid: this.getUserid,
 							sub_uid: this.getSubid,
 							main_id: eid,
 							event_id: eid
 						}
 					}).then((res) => {
-						Toast.success(res.data.msg)
-
-					}).then((res) => {
-						Toast.fail(res.data.msg)
+						if(res.data.status == '1') {
+							for(let i=0; i<this.newlist.length; i++) {
+								if(this.newlist[i].event_main_id == eid) {
+									this.newlist[i].is_favo = 1
+								}
+							}
+							Toast.success(res.data.msg)
+						}else {
+							Toast.fail(res.data.msg)
+						}
+					}).catch((res) => {
+						Toast.fail('数据异常')
 					})
-				}).catch(() => {
-
 				})
 			},
 			getForList() {
@@ -251,16 +319,18 @@
 					this.getForList()
 				}, 1500);
 			},
-			openDetail(id, eid, fid) {
+			openDetail(id, eid, fid, isfavo) {
 				this.pushId = id
 				this.eventId = eid
 				this.fidd = fid
+				this.isFavo = isfavo
 				this.showDetailToggle = true
 			},
-			onLinkEvent(id, eid, fid) {
+			onLinkEvent(id, eid, fid, areaid) {
 				this.pushId = id
 				this.eventId = eid
 				this.fidd = fid
+				this.areaId = areaid
 				this.showLinkEventToggle = true
 			},
 			onClickLaunch(type) {

@@ -141,7 +141,7 @@ export default {
 			}
 		}, 20000)
 		this.$nextTick(() => {
-			if(this.pushQuery.fid) {
+			if(this.pushQuery.fid && this.pushQuery.fid > 0) {
 				this.getMoniInfo()
 			}else {
 				this.getCityInfo()
@@ -208,11 +208,10 @@ export default {
 			}
 		},
 		getCityInfo() {
-			alert('city' +":"+ this.getSubid)
-			alert('city' +":"+ JSON.stringify(this.pushQuery))
+			// alert('city' +":"+ this.getSubid)
+			// alert('city' +":"+ JSON.stringify(this.pushQuery))
 			let push_event_id = ''
 			for(let item in this.pushQuery) {
-				alert(item +":"+ this.pushQuery[item])
 				if(item == 'event_id') {
 					push_event_id = this.pushQuery[item]
 				}
@@ -236,8 +235,8 @@ export default {
 			})
 		},
 		getMoniInfo() {
-			alert('monitor' +":"+ this.getSubid)
-			alert('monitor' +":"+ JSON.stringify(this.pushQuery))
+			// alert('monitor' +":"+ this.getSubid)
+			// alert('monitor' +":"+ JSON.stringify(this.pushQuery))
 			this.$axios({
 				method: 'post',
 				url: '/index.php/Monitor/webcache',
@@ -279,10 +278,10 @@ export default {
 					method: 'post',
 					url: '/index.php/Monitor/eventBatchDelete',
 					data: {
-						fid: this.fid,
+						fid: this.pushQuery.fid,
 						uid: this.getUserid,
 						sub_uid: this.getSubid,
-						event_idlist: [this.eventid]
+						event_idlist: [this.pushQuery.event_id]
 					}
 				}).then((res) => {
 					if(res.data.status == '1') {
@@ -309,11 +308,11 @@ export default {
 					method: 'post',
 					url: '/index.php/City/favorite',
 					data: {
-						fid: this.fid,
+						fid: this.pushQuery.fid,
 						uid: this.getUserid,
 						sub_uid: this.getSubid,
 						main_id: this.detailid,
-						event_id: this.eventid
+						event_id: this.pushQuery.event_id
 					}
 				}).then((res) => {
 					if(res.data.status == '1') {

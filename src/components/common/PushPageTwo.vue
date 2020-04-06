@@ -155,7 +155,6 @@
 						}
 					}
 				}
-				this.layshow = true
 				Toast.loading({
 					message: '推送中...',
 					forbidClick: true,
@@ -177,12 +176,10 @@
 					}
 				}).then((res) => {
 					if(res.data.status == '1') {
-						this.layshow = false
 						Toast.success(res.data.msg);
 						this.$emit('onCloseTwo')
 					}else {
 						setTimeout(() => {
-							this.layshow = false
 							this.$emit('onCloseTwo')
 						}, 800)
 						Toast.fail({
@@ -191,8 +188,8 @@
 						})
 					}
 				}).catch((res) => {
+					Toast.clear()
 					setTimeout(() => {
-						this.layshow = false
 					}, 800)
 					Toast.fail({
 						message: res.data.msg,
@@ -219,7 +216,6 @@
 						}
 					}
 				}
-				this.layshow = true
 				Toast.loading({
 					message: '推送中...',
 					forbidClick: true,
@@ -241,12 +237,10 @@
 					}
 				}).then((res) => {
 					if(res.data.status == '1') {
-						this.layshow = false
 						Toast.success(res.data.msg);
 						this.$emit('onCloseTwo')
 					}else {
 						setTimeout(() => {
-							this.layshow = false
 							this.$emit('onCloseTwo')
 						}, 800)
 						Toast.fail({
@@ -255,9 +249,7 @@
 						})
 					}
 				}).catch((res) => {
-					setTimeout(() => {
-						this.layshow = false
-					}, 800)
+					Toast.clear()
 					Toast.fail({
 						message: res.data.msg,
 						duration: 800

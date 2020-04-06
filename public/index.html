@@ -13,7 +13,13 @@
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
-    <!-- <script>
+    <!-- <script type="text/javascript" src="./xback.js"></script> -->
+    <script type="text/javascript" src="./mui.min.js"></script>
+    <script>
+      // XBack.listen(function() {
+      //   alert('xback try')
+      // })
+
       mui.init({
         keyEventBind: {
           backbutton: true 
@@ -23,7 +29,8 @@
       mui.back = function() {
         if (!first) {
           first = new Date().getTime();
-          history.go(-1); 
+          mui.toast('再按一次退出程序')
+          // history.go(-1); 
           setTimeout(function() {
             first = null;
           }, 1000);
@@ -32,7 +39,7 @@
             plus.runtime.quit(); 
           }
         }
-      };
-    </script> -->
+      }
+    </script>
   </body>
 </html>

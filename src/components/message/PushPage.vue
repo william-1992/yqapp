@@ -9,13 +9,16 @@
 			animated
 		>
 		  <van-tab title="待办事项" name="a">
-			<todo-list v-if="this.pushType == 'a'"></todo-list>
+			<keep-alive><todo-list v-if="this.pushType == 'a'"></todo-list></keep-alive>
 		  </van-tab>
 		  <van-tab title="我发起的" name="b">
-			<push-list v-if="this.pushType == 'b'"></push-list>
+			<keep-alive><push-list v-if="this.pushType == 'b'"></push-list></keep-alive>
 		  </van-tab>
 		  <van-tab title="我转发的" name="c">
-			<forward-list v-if="this.pushType == 'c'"></forward-list>
+			<keep-alive><forward-list v-if="this.pushType == 'c'"></forward-list></keep-alive>
+		  </van-tab>
+		  <van-tab title="我完成的" name="d">
+			<keep-alive><finish-list v-if="this.pushType == 'd'"></finish-list></keep-alive>
 		  </van-tab>
 		</van-tabs>
 	</div>
@@ -25,12 +28,14 @@
 import TodoList from '@c/message/TodoList';
 import PushList from '@c/message/PushList';
 import ForwardList from '@c/message/ForwardList';
+import FinishList from '@c/message/FinishList';
 export default {
 	name: 'push-page',
 	components: {
 		TodoList,
 		PushList,
-		ForwardList
+		ForwardList,
+		FinishList
 	},
 	data() {
 		return {

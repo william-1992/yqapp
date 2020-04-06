@@ -153,12 +153,14 @@ export default {
 			}else if(this.pageType == 'city') {
 				this.getCity()
 			}
-			localStorage.setItem('history', JSON.stringify(this.historylist))
 			if(this.historylist.length > 0) {
-				this.historylist.unshift(this.value)
+				if(this.historylist.indexOf(this.value) == -1) {
+					this.historylist.unshift(this.value)
+				}
 			}else {
 				this.historylist.push(this.value)
 			}
+			localStorage.setItem('history', JSON.stringify(this.historylist))
 		},
 		getHistory() {
 			let list = JSON.parse(localStorage.getItem('history'))

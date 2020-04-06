@@ -1,5 +1,5 @@
 <template>
-	<div class="message-wrap">
+	<div class="message-wrap" :style="{ paddingTop: paddingTT + 'px' }" v-if="homeToggle">
 		<!-- <div class="mes_tabs">
 			<p>
 				<span 
@@ -53,6 +53,7 @@ export default {
 	},
 	data() {
 		return {
+			platform: '',
 			messageTepe: 0,
 			tabsList: [{
 				id: 1,
@@ -70,7 +71,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState([ 'monitorQuery']),
+		...mapState([ 'monitorQuery', 'paddingTT', 'homeToggle']),
 		...mapGetters(['getUserid', 'getSubid'])
 	},
 	activated() {
@@ -98,6 +99,7 @@ export default {
       // 获取 APP 终端标识
       let pinf = plus.push.getClientInfo();  
       let cid = pinf.clientid;
+      this.$store.commit('handleClientId', cid)
       // alert('cid' +":"+ cid)
       
       if(window.webkit) {

@@ -4,7 +4,7 @@
 		<div class="wrap-inner">
 			<div>
 				<header>
-					<h2>{{ info.user.company_name }}</h2>
+					<h2>{{ info.user.company_name || 0 }}</h2>
 					<p>[内部报告，请勿外传]</p>
 				</header>
 				<hgroup>
@@ -15,7 +15,7 @@
 					<div class="desc">
 						<p>监测时间：{{ info.s_timeStr }}~{{ info.e_timeStr }}</p>
 						<p>监测方案：{{ info.plan.title }}</p>
-						<p>数据提供商：{{ this.$store.state.company_short_name }}</p>
+						<p>数据提供商：{{ getCompanyShort || getCompany }}</p>
 					</div>
 				</hgroup>
 				<article>
@@ -68,20 +68,54 @@ export default {
 			}
 			return arr
 		},
-		...mapGetters(['getUserid', 'getSubid']),
+		...mapGetters(['getUserid', 'getSubid', 'getCompanyShort', 'getCompany']),
 		...mapState(['reportToken'])
 	},
 	mounted() {
-		this.$nextTick(function() {
-			this.getInfo()
+		this.$nextTick(() => {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
+			this.$axios({
+				method: 'post',
+				url: '/index.php/Report/getDocDetail',
+				data: {
+					uid: this.getUserid,
+					sub_uid: this.getSubid,
+					token: this.reportToken
+				}
+			}).then((res) => {
+				if(res.data.status == '1') {
+					this.pageToggle = true
+					this.info = res.data.data.info
+					this.message = res.data.data.msg
+					this.mapprov = res.data.data.prov
+					
+					for(let i=0; i<res.data.data.info.source_data.length; i++) {
+						this.category.push({value: res.data.data.info.source_data[i].totle, name: res.data.data.info.source_data[i].name})
+					}
+					Toast.clear()
+				}else {
+					Toast.fail(res.data.msg)
+				}
+			})
 			setTimeout(() => {
 				this.getPie()
 				this.getCate()
-			}, 1000)
+			}, 1500)
 		})
 	},
 	watch: {
 		reportToken(val) {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.getInfo()
 		}
 	},
@@ -142,19 +176,20 @@ export default {
             },
             data: [{
             	value: this.info.point_data.positive,
-            	name: '正面' +':'+ this.info.point_data.positive,
+            	// name: '正面' +':'+ this.info.point_data.positive,
+            	name: '正面',
             	label: {
             		fontSize: 18
             	}
             }, {
             	value: this.info.point_data.neutral,
-            	name: '中性' +':'+ this.info.point_data.neutral,
+            	name: '中性',
             	label: {
             		fontSize: 18
             	}
             }, {
             	value: this.info.point_data.negative,
-            	name: '负面' +':'+ this.info.point_data.negative,
+            	name: '负面',
             	label: {
             		fontSize: 18
             	}
@@ -172,15 +207,23 @@ export default {
 					token: this.reportToken
 				}
 			}).then((res) => {
-				this.info = res.data.data.info
-				this.message = res.data.data.msg
-				this.mapprov = res.data.data.prov
-				this.pageToggle = true
-				for(let i=0; i<res.data.data.info.source_data.length; i++) {
-					this.category.push({value: res.data.data.info.source_data[i].totle, name: res.data.data.info.source_data[i].name})
+				if(res.data.status == '1') {
+					this.pageToggle = true
+					this.info = res.data.data.info
+					this.message = res.data.data.msg
+					this.mapprov = res.data.data.prov
+					
+					for(let i=0; i<res.data.data.info.source_data.length; i++) {
+						this.category.push({value: res.data.data.info.source_data[i].totle, name: res.data.data.info.source_data[i].name})
+					}
+					Toast.clear()
+					this.getPie()
+					this.getCate()
+				}else {
+					Toast.fail(res.data.msg)
 				}
 			}).catch((res) => {
-				Toast.fail(res.data.msg)
+				Toast.fail('信息获取失败！')
 			})
 		}
 	}
