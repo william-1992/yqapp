@@ -1,6 +1,9 @@
 <template>
   <div class="login" :style="{ paddingTop: paddingTT + 'px' }">
+<<<<<<< HEAD
 
+=======
+>>>>>>> 256e6742d25f0cafb8b8d5a2db2236b15a200c4f
     <div class="login-logo">
       <img :src="logoPic" />
     </div>
@@ -22,7 +25,10 @@
 
     <van-button type="primary" size="large" color="#6f7ea0" @click="loginBefore">登录</van-button>
     <input class="hidden" ref="inputurl" :value="linkurl">
+<<<<<<< HEAD
     
+=======
+>>>>>>> 256e6742d25f0cafb8b8d5a2db2236b15a200c4f
   </div>
 </template>
 
@@ -51,7 +57,10 @@ export default {
   },
   beforeRouteLeave(to, from, next) {
     // console.log(to);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 256e6742d25f0cafb8b8d5a2db2236b15a200c4f
     next()
   },
   mounted() {
@@ -185,12 +194,21 @@ export default {
             this.$store.state.cityQuery.uid = res.data.data.login.id;
             this.$store.state.collQuery.uid = res.data.data.login.id;
             this.$store.state.warnQuery.uid = res.data.data.login.id;
+<<<<<<< HEAD
 
             this.$store.state.monitorQuery.sub_uid = res.data.data.login.sub_id;
             this.$store.state.cityQuery.sub_uid = res.data.data.login.sub_id;
             this.$store.state.collQuery.sub_uid = res.data.data.login.sub_id;
             this.$store.state.warnQuery.sub_uid = res.data.data.login.sub_id;
 
+=======
+
+            this.$store.state.monitorQuery.sub_uid = res.data.data.login.sub_id;
+            this.$store.state.cityQuery.sub_uid = res.data.data.login.sub_id;
+            this.$store.state.collQuery.sub_uid = res.data.data.login.sub_id;
+            this.$store.state.warnQuery.sub_uid = res.data.data.login.sub_id;
+
+>>>>>>> 256e6742d25f0cafb8b8d5a2db2236b15a200c4f
             this.$store.state.nickname = res.data.data.login.nickname;
             this.$store.state.company_name = res.data.data.login.company_name;
             this.$store.state.company_short_name = res.data.data.login.company_short_name;
