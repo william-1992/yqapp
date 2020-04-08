@@ -8,6 +8,9 @@
 
       <van-overlay :show="overlayToggle" @click="closeOverlay"></van-overlay>
       <picker></picker>
+
+      <div>1</div>
+
     </div>
   </div>
 </template>
