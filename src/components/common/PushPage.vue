@@ -3,7 +3,7 @@
 		<header>
 			<van-button type="primary" size="small" @click="onPush">推送</van-button>
 		</header>
-		<section class="seleted-name">
+		<section class="seleted-name" v-if="false">
 			<p v-if="result.length == 0">收件人选择</p>
 			<ul v-else>
 				<li v-for="(item, index) in result" :key="index" @click="onClickDelete(index)">
@@ -16,6 +16,22 @@
 			<div class="staff-title">
 				<h3>{{ this.$store.state.company_name }}</h3>
 			</div>
+
+			<van-collapse v-model="activeName" class="staff-content">
+			  <van-collapse-item title="主账号" name="1">
+			  	<van-radio-group v-model="result1">
+					  <van-radio :name="getNickname">
+					  	<div class="item-wrap">
+					  		<div class="item-wrap-circle">{{getNickname.slice(0, 1)}}</div>
+					  		<div class="item-wrap-des">
+					  			<h3>{{getNickname}}</h3>
+					  		</div>
+					  	</div>
+					  </van-radio>
+					</van-radio-group>
+			  </van-collapse-item>
+			</van-collapse>
+
 			<van-collapse v-model="activeNames" class="staff-content">
 			  <van-collapse-item title="标题1" name="1">
 			  	<div slot="title" class="inner">
@@ -25,7 +41,20 @@
 			  		</p>
 			  		<!-- <time>{{ namelist.length }}</time> -->
 			  	</div>
-			  	<van-checkbox-group v-model="result" checked-color="#ff6651">
+
+					<van-radio-group v-model="result">
+					  <van-radio v-for="(item, index) in namelist" :key="item.id" :name="item.nickname">
+					  	<div class="item-wrap">
+					  		<div class="item-wrap-circle">{{item.nickname.slice(0, 1)}}</div>
+					  		<div class="item-wrap-des">
+					  			<h3>{{item.nickname}}</h3>
+					  			<p v-if="item.position">{{item.position}}</p>
+					  		</div>
+					  	</div>
+					  </van-radio>
+					</van-radio-group>
+
+			  	<!-- <van-checkbox-group v-model="result" checked-color="#ff6651">
 					  <van-checkbox v-for="(item, index) in namelist" :key="item.id" :name="item.nickname">
 					  	<div class="item-wrap">
 					  		<div class="item-wrap-circle">{{item.nickname.slice(0, 1)}}</div>
@@ -35,7 +64,8 @@
 					  		</div>
 					  	</div>
 						</van-checkbox>
-					</van-checkbox-group>
+					</van-checkbox-group> -->
+
 				</van-collapse-item>
 			</van-collapse>
 		</section>
@@ -87,20 +117,35 @@ export default {
 	},
 	data() {
 		return {
+			activeName: ['1'],
 			layshow: false,
 			sendradio: '1',
 			checked: false,
 			message: '',
 			activeNames: ['1'],
 			result: [],
-			namelist: []
+			result1: [],
+			namelist: [],
+			pushUserId: ''
 		}
 	},
 	mounted() {
 		this.getUser()
 	},
 	computed: {
-		...mapGetters(['getUserid', 'getSubid'])
+		...mapGetters(['getUserid', 'getSubid', 'getNickname'])
+	},
+	watch: {
+		result1(val) {
+			if(val.length > 0) {
+				this.result = []
+			}
+		},
+		result(val) {
+			if(val.length > 0) {
+				this.result1 = []
+			}
+		}
 	},
 	methods: {
 		onPush() {
@@ -108,45 +153,61 @@ export default {
 				Toast.fail('请选择推送人')
 				return false
 			}else {
-				let arr = []
-				for(let i=0; i<this.namelist.length; i++) {
-					for(let j=0; j<this.result.length; j++) {
-						if(this.result[j] == this.namelist[i].nickname ) {
-							arr.push(this.namelist[i].id)
+				if(this.message !== '') {
+					let arr = []
+
+					for(let i=0; i<this.namelist.length; i++) {
+						for(let j=0; j<this.result.length; j++) {
+							if(this.result[j] == this.namelist[i].nickname ) {
+								arr.push(this.namelist[i].id)
+							}
 						}
 					}
-				}
-				// 判断storeType为true时走收藏页推送，为false时走转发和其它推送接口
-				if(this.storeType) {
-					// 收藏 - 推送
-					this.pushToSubuser()
-				}else {
-					if(this.pushid !== '') {
-						// 推送 - 转发
-						this.pushForward()
+
+					if(this.result.length > 0) {
+						for(let i=0; i<this.namelist.length; i++) {
+							if(this.result == this.namelist[i].nickname) {
+								this.pushUserId = this.namelist[i].id
+							}
+						}
 					}else {
-						// fid不为数组时，城市舆情页和监测中心页推送时
-						this.pushToPage()
+						this.pushUserId = this.getSubid
 					}
+
+					// 判断storeType为true时走收藏页推送，为false时走转发和其它推送接口
+					if(this.storeType) {
+						// 收藏 - 推送
+						this.pushToSubuser()
+					}else {
+						if(this.pushid !== '') {
+							// 推送 - 转发
+							this.pushForward()
+						}else {
+							// fid不为数组时，城市舆情页和监测中心页推送时
+							this.pushToPage()
+						}
+					}
+					this.message = ''
+				}else {
+					Toast.fail('请输入留言！')
 				}
 			}
 		},
 		pushToPage() {
 			let eventarr = []
-			let arr = []
+
+			let nameid = ''
 			for(let i=0; i<this.namelist.length; i++) {
-				for(let j=0; j<this.result.length; j++) {
-					if(this.result[j] == this.namelist[i].nickname ) {
-						arr.push(this.namelist[i].id)
-					}
+				if(this.namelist[i].nickname == this.result) {
+					nameid = this.namelist[i].id
 				}
 			}
+
 			for(let i=0; i<this.eventlist.length; i++) {
 				if(eventarr.indexOf(this.eventlist[i]) == -1) {
 					eventarr.push(this.eventlist[i])
 				}
 			}
-			this.layshow = true
 			Toast.loading({
 				message: '推送中...',
 				forbidClick: true,
@@ -161,37 +222,31 @@ export default {
 					sub_uid: this.getSubid,
 					fid: this.fid,
 					main_id: eventarr,
-					sub_userlist: arr,
+					sub_userlist: [nameid],
 					remark: this.message
 				}
 			}).then((res) => {
 				if(res.data.status == '1') {
-					this.layshow = false
 					Toast.success(res.data.msg)
 					this.$emit('onCloseOne')
 				}else {
 					setTimeout(() => {
-						this.layshow = false
 						this.$emit('onCloseOne')
 						Toast.clear()
 					}, 800)
-					Toast.fail({
-						message: res.data.msg,
-						duration: 800
-					})
 				}
-			})	
+			}).catch(() => {
+				Toast.fail('留言不能包含特殊字符！')
+			})
 		},
 		pushToSubuser() {
-			let arr = []
+			let nameid = ''
 			for(let i=0; i<this.namelist.length; i++) {
-				for(let j=0; j<this.result.length; j++) {
-					if(this.result[j] == this.namelist[i].nickname ) {
-						arr.push(this.namelist[i].id)
-					}
+				if(this.namelist[i].nickname == this.result) {
+					nameid = this.namelist[i].id
 				}
 			}
-			this.layshow = true
+
 			Toast.loading({
 				message: '推送中...',
 				forbidClick: true,
@@ -207,35 +262,30 @@ export default {
 
 					fid: this.fidlist,
 					main_id: this.eventlist,
-					sub_userlist: arr,
+					sub_userlist: [nameid],
 					remark: this.message
 				}
 			}).then((res) => {
 				if(res.data.status == '1') {
-					this.layshow = false
 					Toast.success(res.data.msg)
 					this.$emit('onCloseOne')
 				}else {
-					this.layshow = false
 					Toast.fail(res.data.msg)
 					this.$emit('onCloseOne')
 				}
-				Toast.clear()
 			}).catch((res) => {
-				this.layshow = false
-				Toast.fail(res.data.msg)
+				// Toast.clear()
+				Toast.fail('留言不可包含特殊字符！')
 			})
 		},
 		pushForward() {
-			let arr = []
+			let nameid = ''
 			for(let i=0; i<this.namelist.length; i++) {
-				for(let j=0; j<this.result.length; j++) {
-					if(this.result[j] == this.namelist[i].nickname ) {
-						arr.push(this.namelist[i].id)
-					}
+				if(this.namelist[i].nickname == this.result) {
+					nameid = this.namelist[i].id
 				}
 			}
-			this.layshow = true
+
 			Toast.loading({
 				message: '推送中...',
 				forbidClick: true,
@@ -249,23 +299,20 @@ export default {
 					uid: this.getUserid,
 					sub_uid: this.getSubid,
 					event_push_id: this.pushid,
-					sub_userlist: arr,
+					sub_userlist: [nameid],
 					remark: this.message
 				}
 			}).then((res) => {
 				if(res.data.status == '1') {
-					this.layshow = false
 					Toast.success(res.data.msg)
 					this.$emit('onCloseOne', this.pushid)
 				}else {
-					// this.layshow = false
 					Toast.fail(res.data.msg)
-					// this.$emit('onCloseOne')
 				}
 			}).catch((res) => {
-				this.layshow = false
-				Toast.fail(res.data.msg)
-				this.$emit('onCloseOne')
+				// Toast.clear()
+				Toast.fail('留言不可包含特殊字符！')
+				// this.$emit('onCloseOne')
 			})
 		},
 		getUser() {
@@ -283,7 +330,7 @@ export default {
 					Toast.fail(res.data.msg)
 				}
 			}).catch((res) => {
-				Toast.fail(res.data.msg)
+				Toast.fail('留言不可包含特殊字符！')
 			})
 		},
 		onClickDelete(index) {
@@ -357,7 +404,7 @@ export default {
 			/deep/.van-icon-arrow {
 				display: block;
 			}
-			/deep/.van-checkbox {
+			/deep/.van-radio {
 				justify-content: space-between;
 				flex-direction: row-reverse;
 				margin-bottom: px2rem(15);

@@ -1,5 +1,5 @@
 <template>
-	<div class="center" :style="{ paddingTop: paddingTT + 'px' }">
+	<div class="center" :style="{ paddingTop: paddingTT + 'px' }" v-if="homeToggle">
 		<center-index />
 	</div>
 </template>
@@ -13,7 +13,7 @@ export default {
 		CenterIndex
 	},
 	computed: {
-		...mapState(['paddingTT'])
+		...mapState(['paddingTT', 'homeToggle'])
 	},
 	activated() {
 		if(window.plus) {

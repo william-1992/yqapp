@@ -57,22 +57,41 @@ export default {
 		}
 	},
 	mounted() {
-		this.getArea()
+		this.$nextTick(() => {
+			this.getArea()
+		})
 	},
 	computed: {
-		...mapState(['monitorQuery']),
+		...mapState(['monitorQuery', 'areaList', 'pickerName', 'fid']),
 		...mapGetters(['getUserid', 'getSubid'])
 	},
 	watch: {
 		ppid(id) {
 			this.monitorQuery.areaid = id
+		},
+		fid(id) {
+			this.namelist = this.namelist.slice(0, 1)
+			this.namelist[0].name = this.pickerName.name
+			this.activeIndex = this.namelist.length-1
+			if(this.areaList.length <= 0) {
+				this.ppid = this.pickerName.id
+				this.getArea()
+			}else {
+				this.namelist[0].citylist = this.areaList
+			}
 		}
 	},
 	methods: {
 		onClickSure() {
+			Toast.loading({
+				message: '加载中...',
+				forbidClick: true,
+				loadingType: 'spinner',
+				duration: 0
+			})
 			this.$emit('closeArea', false)
 			this.$store.state.monitorQuery.areaid = this.ppid
-			this.$store.state.pickerName = this.areaname
+			this.$store.commit('handleAddressName', {name: this.areaname, id: this.ppid})
 			this.$axios({
 				method: 'post',
 				url: '/index.php/Monitor/getESearch',
@@ -87,6 +106,7 @@ export default {
 				}else {
 					this.$store.commit('handleMonitorList', [])
 				}
+				Toast.clear()
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})
@@ -102,7 +122,6 @@ export default {
 			this.namelist = this.namelist.slice(0, this.activeIndex+1)
 
 			if(this.namelist.length <= 4 && data.level < 4) {
-				console.log(data)
 				this.$axios({
 					method: 'post',
 					url: '/index.php/Monitor/getAreaChild',

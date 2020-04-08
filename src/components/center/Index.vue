@@ -11,14 +11,21 @@
 		>
 			<van-tab v-for="item in flist" :title="item.title" :key="item.id"></van-tab>
 		</van-tabs>
-		<hottest hotType="centerpage"></hottest>
-		<text-list :fidd="fidd"/>
+		<hottest hotType="centerpage">
+			<slot>
+				<h1>this is title</h1>
+			</slot>
+			<slot>
+				<h1>this is ftitle</h1>
+			</slot>
+		</hottest>
+		<keep-alive><text-list ref="cenli" :fidd="fidd"/></keep-alive>
 	</div>
 </template>
 
 <script>
 import { Toast } from 'vant';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import Search from '@c/common/Search';
 import Hottest from '@c/common/Hottest';
 import TextList from '@c/center/List';
@@ -31,6 +38,7 @@ export default {
 	},
 	data() {
 		return {
+			msg: 'william',
 			active: 0,
 			flist: [],
 			search_val: {},
@@ -42,14 +50,29 @@ export default {
 			this.$store.state.fid = this.flist[index].id
 			this.fidd = this.flist[index].id
 			this.$store.state.monitorQuery.fid = this.fidd
+			this.$store.state.monitorQuery.page = 1
+			let len = this.flist[index].area_list.length
+			if(len > 1) {
+				this.$store.commit('handleArealist', this.flist[index].area_list)
+				this.$store.commit('handleAddressName', {name: '全部', id: 0})
+			}else {
+				this.$store.commit('handleAddressName', this.flist[index].area_list[0])
+				this.$store.commit('handleArealist', [])
+			}
 		} 
 	},
 	mounted() {
 		this.$nextTick(() => {
 			this.getPlanList()
 		})
+		console.log(this.$children, 'fu')
+		this.$children.forEach((item) => {
+			item.childrenfn()
+		})
+		// this.$refs.cenli.childrenfn()
 	},
 	computed: {
+		...mapState(['paddingTT']),
 		...mapGetters(['getUserid', 'getSubid'])
 	},
 	methods: {
@@ -70,6 +93,14 @@ export default {
 					this.fidd = res.data.data[0].id
 					this.$store.state.fid = res.data.data[0].id
 					this.$store.state.monitorQuery.fid = res.data.data[0].id
+					let info2 = res.data.data[0].area_list
+					if(info2.length > 1) {
+						this.$store.commit('handleArealist', info2)
+						this.$store.commit('handleAddressName', {name: '全部', id: 0})
+					}else {
+						this.$store.commit('handleAddressName', info2[0])
+						this.$store.commit('handleArealist', [])
+					}
 				}else {
 					Toast.fail(res.data.msg)
 				}

@@ -1,5 +1,6 @@
 <template>
 	<div class="report">
+
 			<h2>我的报告</h2>
 			<ul>
 				<li v-for="item in list" :key="item.id" @click="onClickItem(item.title, item.id)">
@@ -22,12 +23,13 @@
 			>
 				<div class="item-wrap">
 					<h4>{{ mestTitle }}</h4>
-					<ul class="item-wrap">
+					<ul class="item-wrap" v-if="finished_toggle">
 						<li v-for="item in detailList" :key="item.id" @click="onClickDetail(item.token)">
 							<div><strong>{{ item.title }}</strong></div>
 							<i class="iconfont" @click="onClickDelete($event, item.id)">&#xe64c;</i>
 						</li>
 					</ul>
+					<p v-else class="finished_type">没有更多了</p>
 				</div>				
 			</van-popup>
 
@@ -59,6 +61,7 @@ export default {
 	},
 	data() {
 		return {
+			finished_toggle: true,
 			itemToggle: false,
 			detailToggle: false,
 			mestTitle: '我的报告',
@@ -107,7 +110,16 @@ export default {
 					type: 'day'
 				}
 			}).then((res) => {
-				this.detailList = res.data.data
+				if(res.data.status == '1') {
+					if(res.data.data.length > 0) {
+						this.detailList = res.data.data
+						this.finished_toggle = true
+					}else {
+						this.finished_toggle = false
+					}
+				}else {
+					Toast.fail(res.data.msg)
+				}
 			}).catch((res) => {
 				Toast.fail(res.data.msg)
 			})
@@ -125,6 +137,8 @@ export default {
 					method: 'post',
 					url: '/index.php/Report/deleteDoc',
 					data: {
+						uid: this.getUserid,
+						sub_uid: this.getSubid,
 						id: id
 					}
 				}).then((res) => {
@@ -149,6 +163,14 @@ export default {
 		color: #323948;
 		line-height: px2rem(50);
 		text-align: center;
+	}
+	ul {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: px2rem(50);
+		bottom: 0;
+		overflow: auto;
 	}
 	ul li{
 		display: flex;
@@ -193,6 +215,12 @@ export default {
 					font-size: px2rem(14);
 				}
 			}
+		}
+		.finished_type {
+			line-height: px2rem(50);
+			font-size: px2rem(14);
+			color: #969799;
+			text-align: center;
 		}
 	}
 }

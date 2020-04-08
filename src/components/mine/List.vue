@@ -1,8 +1,6 @@
 <template>
 	<div class="list">
 
-
-
 		<van-pull-refresh v-model="isLoading" @refresh="onRefresh">
 
 		<van-list 
@@ -19,20 +17,20 @@
 				<!-- <van-cell :border="false"> -->
 				<div class="li-wrap">
 					<div class="title">
-						<div class="left">
+						<div class="left" v-show="item.f_delete !==1">
 							<van-checkbox v-show="checkboxToggleColl" v-model="item.checked" :key="item.id" :name="item.id" checked-color="#ff6651"
 							 @click.stop="onClickRadio(item.id)"></van-checkbox>
 							<div class="rect zheng" v-if="item.point == '2'">正</div>
 							<div class="rect fu" v-else-if="item.point == '1'">负</div>
 							<div class="rect zhong" v-else>中</div>
-							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.id, item.fid || 0)">{{ item.docount }}</div>
+							<div class="frie" @click.stop="onLinkEvent(item.event_id, item.id, item.fid || 0, item.areaid)">{{ item.docount }}</div>
 						</div>
 						<div class="right">
 							{{item.preTimeStr}}前更新
 						</div>
 					</div>
 					<div class="timer">
-						<div class="timer-left">
+						<div class="timer-left" v-show="item.f_delete !==1">
 							<!-- <i class="iconfont">&#xe623;</i> -->
 							<img v-if="item.site_icon_type == 9" src="../../assets/images/newicon04.png" />
 							<img v-else-if="item.site_icon_type == 20" src="../../assets/images/newicon09.png" />
@@ -48,13 +46,16 @@
 						</div>
 					</div>
 					<div class="desc" @click="openDetail(item.event_id, item.id, item.fid || 0)">
-						<p>{{item.light | textLength}}</p>
+						<p>{{item.title | textLength}}</p>
 					</div>
-					<div class="tags">
-						<h5>监控词组：</h5>
-						<p>
+					<div class="tags" v-if="item.fid > 0">
+						<h5 v-if="item.f_delete !==1" >监控词组：</h5>
+						<p v-if="item.f_delete !==1" >
 							<span v-for="(val, index) in item.ewords" :key="index">{{ val }}</span>
 						</p>
+					</div>
+					<div class="tags" v-else>
+						<h5>城市舆情</h5>
 					</div>
 				</div>
 				<!-- </van-cell> -->
@@ -107,7 +108,7 @@
 			closeable 
 			close-icon-position="top-left"
 		>
-			<event-list :eventType="'favo'" :fid="fidd" :eid="eventId" :aid="detailId"></event-list>
+			<event-list :eventType="'favo'" :fid="fidd" :eid="eventId" :aid="detailId" :areaid="areaId"></event-list>
 		</van-popup>
 
 		<van-popup
@@ -146,6 +147,7 @@
 		},
 		data() {
 			return {
+				areaId: '',
 				isLoading: false,
 				linkToggle: false,
 				pushToggle: false,
@@ -171,6 +173,31 @@
 			...mapGetters(['getUserid', 'getSubid'])
 		},
 		watch: {
+			getUserid(id) {
+				this.$store.commit('handleCollList', [])
+				this.$store.state.collQuery.page = 0
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Favo/getList',
+					data: this.collQuery
+				}).then((res) => {
+					if(res.data.status == '1') {
+						if(res.data.data.length > 0) {
+							this.$store.commit('handleCollList', res.data.data)
+							this.$store.state.collQuery.page = this.$store.state.collQuery.page + 1
+						}else {
+							this.$store.commit('handleCollList', [])
+							this.finished = true;
+						}
+						this.loading = false
+					}else {
+						this.$store.commit('handleCollList', [])
+						this.loading = false
+						this.errored = true
+					}
+					this.isLoading = false
+				})
+			},
 			page(val) {
 				// this.collQuery.page = val
 			},
@@ -203,11 +230,16 @@
 			}
 		},
 		mounted() {
-			this.getList()
+			this.$nextTick(() => {
+				this.$store.commit('handleCollList', [])
+				this.$store.state.collQuery.page = 0
+				this.getList()
+			})
 		},
 		methods: {
 			onRefresh() {
 				setTimeout(() => {
+					this.allchecked = false
 					this.$store.commit('handleCollList', [])
 					this.$store.state.collQuery.page = 0
 					this.getList()
@@ -216,6 +248,7 @@
 			},
 			closePush() {
 				this.pushToggle = false
+				this.$store.commit('handleCheckboxColl', false)
 			},
 			onClickOnePush(id, eid, fid, url) {
 				this.idlist = []
@@ -241,13 +274,12 @@
 						url: '/index.php/Favo/doDel',
 						data: {
 							uid: this.getUserid,
-							sub_uid: this.getSubid,
-							main_id: id
+							main_id: [id]
 						}
 					}).then((res) => {
 						if(res.data.status == '1') {
 							for(let i=0; i<this.collEventList.length; i++) {
-								if(this.collEventList[i].checked) {
+								if(this.collEventList[i].event_id == id) {
 									this.collEventList.splice(i, 1)
 								}
 							}
@@ -256,13 +288,18 @@
 							Toast.fail(res.data.msg)
 						}
 					}).catch((res) => {
-						Toast.fail(res.data.msg)
+						Toast.fail('数据异常')
 					})
 				})
 			},
 			detailClose(data) {
 				console.log(data)
 				this.showDetailToggle = false
+				for(let i=0; i<this.collEventList.length; i++) {
+					if(this.collEventList[i].event_id == data) {
+						this.collEventList.splice(i, 1)
+					}
+				}
 			},
 			getList() {
 				this.$axios({
@@ -275,6 +312,7 @@
 							this.$store.commit('handleCollList', this.collEventList.concat(res.data.data))
 							this.$store.state.collQuery.page = this.$store.state.collQuery.page + 1
 						}else {
+							// this.$store.commit('handleCollList', [])
 							this.finished = true;
 						}
 						this.loading = false
@@ -308,12 +346,13 @@
 				this.fidd = fid
 				this.showDetailToggle = true
 			},
-			onLinkEvent(eid, id, fid) {
+			onLinkEvent(eid, id, fid, areaid) {
 				this.eventId = eid
 				this.detailId = id
 				this.idlist.push(id)
 				this.eventlist.push(eid)
 				this.fidd = fid
+				this.areaId = areaid
 				this.showLinkEventToggle = true
 			},
 			collection() {
@@ -339,36 +378,48 @@
 			},
 			onClickCancle() {
 				let arr = []
-				for (let i = 0; i < this.newlist.length; i++) {
-					if (this.newlist[i].checked) {
-						arr.push(this.newlist[i].id)
+				for (let i = 0; i < this.collEventList.length; i++) {
+					if (this.collEventList[i].checked) {
+						arr.push(this.collEventList[i].event_id)
 					}
 				}
 				if (arr.length > 0) {
-					this.$axios({
-						method: 'post',
-						url: '/index.php/Favo/doDel',
-						data: {
-							uid: this.getUserid,
-							sub_uid: this.getSubid,
-							main_id: arr
-						}
-					}).then((res) => {
-						if(res.data.status == 1) {
-							for(let i=0; i<this.newlist.length; i++) {
-								if(this.newlist[i].checked) {
-									this.newlist.splice(i, 1)
-								}
-							}
-						}else {
-							Toast.fail(res.data.msg)
-						}
-					}).catch((res) => {
-						Toast.fail(res.data.msg)
+					Dialog.confirm({
+						message: '确定取消收藏该些信息？'
+					}).then(() => {
+						this.favoDodel(arr)
+						this.$store.commit('handleCheckboxColl', false)
 					})
 				} else {
 					Toast('你还没有选择事件哦')
 				}
+			},
+			favoDodel(data) {
+				this.$axios({
+					method: 'post',
+					url: '/index.php/Favo/doDel',
+					data: {
+						uid: this.getUserid,
+						main_id: data
+					}
+				}).then((res) => {
+					if(res.data.status == 1) {
+						for(let i=0; i<this.collEventList.length; i++) {
+							for(let j=0; j<data.length; j++) {
+								if(this.collEventList[i].event_id == data[j]) {
+									this.collEventList.splice(i, 1)
+								}
+							}
+						}
+						if(this.collEventList.length == 0) {
+							this.finished = true
+						}
+					}else {
+						Toast.fail(res.data.msg)
+					}
+				}).catch((res) => {
+					Toast.fail(res.data.msg)
+				})
 			}
 		}
 	}
@@ -483,6 +534,15 @@
 					text-align: center;
 					background-color: $rectBg1;
 				}
+
+				.zhong {
+					background-color: $rectBg2;
+				}
+
+				.fu {
+					background-color: $rectBg3;
+				}
+
 
 				.right {
 					line-height: px2rem(24);
